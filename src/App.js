@@ -10,7 +10,7 @@ function App() {
     })();
   });
 
-  return <div>Hello from react</div>;
+  return <div>{data}</div>;
 }
 
 export default App;
