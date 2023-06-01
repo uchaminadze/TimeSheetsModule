@@ -18,6 +18,7 @@ function App() {
     window.location.replace("/.auth/login/aad")
   }
 
+  
   return(
     <>
       <a href="/.auth/logout">Log out</a>
