@@ -1,8 +1,8 @@
 import React from "react";
 
 export const ProfileData = ({graphData, dataverseData}) => {
-    const {givenName, surname, userPrincipalName, id} = graphData;
-    const {BusinessUnitId, OrganizationId, UserId} = dataverseData;
+    const {givenName, surname, userPrincipalName, id} = graphData || {};
+    const {BusinessUnitId, OrganizationId, UserId} = dataverseData || {};
     return (
         <div>
             <h3>MS Graph Data</h3>
