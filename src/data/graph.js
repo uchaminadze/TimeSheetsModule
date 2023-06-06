@@ -1,4 +1,4 @@
-import { graphConfig } from "./authConfig";
+import { graphConfig } from "../authConfig";
 
 /**
  * @param accessToken

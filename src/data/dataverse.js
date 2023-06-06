@@ -1,4 +1,4 @@
-import { dataverseConfig } from "./authConfig";
+import { dataverseConfig } from "../authConfig";
 
 /**
  * @param accessToken
