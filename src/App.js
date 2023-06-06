@@ -1,50 +1,67 @@
-import React, { useEffect, useState } from "react";
-import Home from "./pages/Home/home";
+import React, { useState } from 'react';
+import { PageLayout } from './components/PageLayout';
+import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
+import { baseUrl, loginRequest } from './authConfig';
+import { callMsGraph } from './graph';
+import { ProfileData } from './components/ProfileData';
+import { callDataverseWebAPI } from './dataverse';
+import { useEffect } from 'react';
 
-function App() {
-  const [userInfo, setUserInfo] = useState();
-  useEffect(() => {
-    getUserInfo();  
-    fetch(`/api/getroles`, {  
-      method: "POST", 
-      body: JSON.stringify({
-        user: {
-          accessToken: "eyJ1c2VySWQiOiJjMDNlYjZmZWJlM2VkMmYzYzNiZDFkMWFmNzQzMzhjNSIsInVzZXJSb2xlcyI6WyJhbm9ueW1vdXMiLCJhdXRoZW50aWNhdGVkIl0sImNsYWltcyI6W10sImlkZW50aXR5UHJvdmlkZXIiOiJhYWQiLCJ1c2VyRGV0YWlscyI6InVzZXJyciJ9"   
-        }
-      }),
-      headers: {
-        "Content-type": "application/json"
-      },
-      
-      
-    })
-      .then((response) => response.json())
-      .then((data) => console.log(data));
-  }, []);
-
-  async function getUserInfo() {
-    const response = await fetch("/.auth/me");
-    const user = await response.json();
-    console.log(user);
-    setUserInfo(user);
-  }
+const ProfileContent = () => {
+    const { instance, accounts } = useMsal();
+    const [graphData, setGraphData] = useState(null);
+    const [dataverseData, setDataverseData] = useState(null);
 
 
-  return (
-    <>
-      {userInfo?.clientPrincipal !== null && (
-        <li>
-          <a href="/.auth/logout">Log out</a>
-        </li>
-      )}
-      {userInfo?.clientPrincipal === null && (
-        <li>
-          <a href="/authenticated/">Only authenticated users</a>
-        </li>
-      )}
-      <Home user={userInfo} />
-    </>
-  );
+    useEffect(() => {
+        instance
+            .acquireTokenSilent({
+                ...loginRequest,
+                account: accounts[0],
+            })
+            .then((response) => {
+                callMsGraph(response.accessToken).then((response) => setGraphData(response));
+            });
+
+        instance
+            .acquireTokenSilent({
+                ...loginRequest,
+                account: accounts[0],
+                scopes: [baseUrl+"/.default"]
+            })
+            .then((response) => {
+                console.log(accounts)
+                callDataverseWebAPI("WhoAmI", response.accessToken).then((response) => setDataverseData(response));
+            });
+    }, [])
+
+    return (
+        <>
+            <h5>Welcome {accounts[0].name}</h5>
+            {graphData && <ProfileData graphData={graphData} />}
+        </>
+    );
+};
+
+
+const MainContent = () => {
+    return (
+        <div className="App">
+            <AuthenticatedTemplate>
+                <ProfileContent />
+            </AuthenticatedTemplate>
+
+            <UnauthenticatedTemplate>
+                <h5>Please sign-in to see your profile information.</h5>
+            </UnauthenticatedTemplate>
+        </div>
+    );
+};
+
+export default function App() {
+    return (
+        <PageLayout>
+            <MainContent />
+        </PageLayout>
+    );
 }
-
-export default App;
