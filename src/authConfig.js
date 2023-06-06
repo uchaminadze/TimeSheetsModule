@@ -8,7 +8,7 @@ export const msalConfig = {
     auth: {
         clientId: "77856b46-5005-4bcd-bff3-b00106461b37",
         authority: "https://login.microsoftonline.com/"+tenantId,
-        redirectUri: "https://mango-cliff-04f343c03.3.azurestaticapps.net"
+        redirectUri: window.location.origin
     },
     cache: {
         cacheLocation: "sessionStorage",
