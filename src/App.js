@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 
 const ProfileContent = () => {
     const { instance, accounts } = useMsal();
-    const [graphData, setGraphData] = useState(null);
+    const [graphData, setGraphData] = useState(null); 
     const [dataverseData, setDataverseData] = useState(null);
 
 
