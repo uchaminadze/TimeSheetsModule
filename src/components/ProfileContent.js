@@ -23,7 +23,8 @@ function ProfileContent ({instance, accounts}) {
             .acquireTokenSilent({
                 ...loginRequest,
                 account: accounts[0],
-                scopes: [baseUrl+"/.default"]
+                scopes: [baseUrl+"/user_impersonation"]
+                // scopes: [baseUrl+"/.default"]
             })
             .then((response) => {
                 callDataverseWebAPI("WhoAmI", response.accessToken).then((response) => setDataverseData(response));
