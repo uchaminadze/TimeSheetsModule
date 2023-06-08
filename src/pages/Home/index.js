@@ -1,12 +1,12 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
-import ProfileContent from '../../components/ProfileContent';
+import TimeSheetTable from '../../components/TimeSheetTable';
 
 
 function Home({instance, accounts}) { 
     return (
         <div>
             <AuthenticatedTemplate>
-                <ProfileContent instance={instance} accounts={accounts}/>
+                <TimeSheetTable instance={instance} accounts={accounts}/>
             </AuthenticatedTemplate>
 
             <UnauthenticatedTemplate>

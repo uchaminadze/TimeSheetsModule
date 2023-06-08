@@ -7,21 +7,15 @@ import { useMsal } from "@azure/msal-react";
 export const SignOutButton = () => {
     const { instance } = useMsal();
 
-    const handleLogout = (logoutType) => {
-        if (logoutType === "popup") {
-            instance.logoutPopup({
-                postLogoutRedirectUri: "/",
-                mainWindowRedirectUri: "/"
-            });
-        } else if (logoutType === "redirect") {
-            instance.logoutRedirect({
-                postLogoutRedirectUri: "/",
-            });
-        }
+    const handleLogout = () => {
+        instance.logoutRedirect({
+            postLogoutRedirectUri: "/",
+        });
+        localStorage.clear()
     }
 
     
     return (
-        <button as="button" onClick={() => handleLogout("redirect")}>Sign out</button>
+        <button as="button" onClick={() => handleLogout()}>Sign out</button>
     )
 }

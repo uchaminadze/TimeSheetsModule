@@ -1,6 +1,6 @@
 import { LogLevel } from "@azure/msal-browser";
 
-export const baseUrl = "https://orgf6218f79.api.crm.dynamics.com";
+export const baseUrl = "https://org2e01c0ca.api.crm.dynamics.com";
 const tenantId = "1b2695b6-7a1e-47e0-a688-2b0da022362b";
 const webAPIEndpoint = baseUrl + "/api/data/v9.2";
 
