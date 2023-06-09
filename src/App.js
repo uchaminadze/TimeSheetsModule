@@ -5,6 +5,7 @@ import Home from './pages/Home';
 
 export default function App() {
     const { instance, accounts } = useMsal();
+
     return (
         <PageLayout>
             <Home instance={instance} accounts={accounts}/>

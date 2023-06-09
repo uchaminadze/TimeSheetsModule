@@ -1,27 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { baseUrl, loginRequest } from "../authConfig";
-import { AccountData } from "./TimeSheetData";
-import { callMsGraph } from "../data/graph";
-import { callDataverseWebAPI } from "../data/dataverse";
+import { TimeSheetData } from "./TimeSheetData";
+import { callMsGraph } from "../api/graph";
+import { callDataverseWebAPI } from "../api/dataverse";
+import useStore from "../store/useStore";
 
 function TimeSheetTable ({instance, accounts}) {
-    const [timeSheetData, setTimeSheetData] = useState(null);
+    const {timeSheetData, setTimeSheetData} = useStore()
+    
 
     useEffect(() => {
         graphCall();
     }, []);
-
-
-
-
+    
+    
     function graphCall(){
         instance
-            .acquireTokenSilent({
-                ...loginRequest,
-                account: accounts[0],
-            })
-            .then((response) => {
-                callMsGraph(response.accessToken).then((response) => {
+        .acquireTokenSilent({
+            ...loginRequest,
+            account: accounts[0],
+        })
+        .then((response) => {
+            callMsGraph(response.accessToken).then((response) => {
                     localStorage.setItem('userEmail', response.userPrincipalName.toLowerCase())
                     dataverseCall();
                 })
@@ -59,15 +59,16 @@ function TimeSheetTable ({instance, accounts}) {
         const accessToken = localStorage.getItem('accessToken');
         const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue}`;
         callDataverseWebAPI("cr303_timesheets"+urlEndpoint, accessToken)
-            .then((data) => setTimeSheetData(data.value[0]))
+            .then((data) => setTimeSheetData(data.value))
             .catch((err)=> console.log(err))
     }
+    
 
 
     return (
-        <>
+        <>  
             <h5>Welcome {accounts[0].name}</h5>
-            {timeSheetData && <AccountData timeSheetData={timeSheetData} />}
+            {timeSheetData && <TimeSheetData />}
         </>
     );
 };
