@@ -6,8 +6,9 @@ import {
   getWeekDayHours,
   weekDayNames,
 } from "../data/timeSheetData";
+import Project from "./Project";
 
-export const TimeSheetData = () => {
+export const TimeSheetData = ({ projects }) => {
   const { timeSheetData } = useStore();
 
   const cr303_sundaydate = timeSheetData.map((el) => {
@@ -26,6 +27,7 @@ export const TimeSheetData = () => {
     return { weekDayDates: weekDayDates, hours: hours, comments: comments };
   });
 
+
   const weekStart = new Date(cr303_sundaydate[0]);
   const weekStartMonth = weekStart.toLocaleString("default", {
     month: "short",
@@ -37,6 +39,17 @@ export const TimeSheetData = () => {
   const weekEndDay = weekEnd.getUTCDate();
 
   const formattedDate = `${weekStartMonth} ${weekStartDay} - ${weekEndMonth} ${weekEndDay}`;
+
+
+
+  const totalSundayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_sundayhours, 0);
+  const totalMondayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_mondayhours, 0);
+  const totalTuesdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_tuesdayhours, 0);
+  const totalWednesdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_wednesdayhours, 0);
+  const totalThursdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_thursdayhours, 0);
+  const totalFridayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_fridayhours, 0);
+  const totalSaturdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_saturdayhours, 0);
+
 
   return (
     <div>
@@ -59,7 +72,6 @@ export const TimeSheetData = () => {
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           {mappedTimeSheetData[0].weekDayDates.map((sheet, index) => {
             const slicedDay = sheet.slice(8, 10);
-            console.log(slicedDay);
             return (
               <div key={index + 1}>
                 <p>{slicedDay}</p>
@@ -68,12 +80,19 @@ export const TimeSheetData = () => {
           })}
         </div>
         {mappedTimeSheetData.map((sheet, index) => {
+            const sum = sheet.hours.reduce((acc, curr) => {
+                return acc + curr;
+              }, 0);
           return (
             <div
               key={index + 1}
               style={{ display: "flex", justifyContent: "space-between" }}
             >
+              <div>
+                <Project projects={projects} />
+              </div>
               {sheet.weekDayDates.map((day, index) => {
+                console.log(sheet);
                 return (
                   <div key={index + 1}>
                     <div>
@@ -86,9 +105,23 @@ export const TimeSheetData = () => {
                   </div>
                 );
               })}
+            <div>
+                <p>{sum}</p>
+            </div>
             </div>
           );
         })}
+        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+            <p>Total work time:</p>
+
+            <span>{totalSundayHours}</span>
+            <span>{totalMondayHours}</span>
+            <span>{totalTuesdayHours}</span>
+            <span>{totalWednesdayHours}</span>
+            <span>{totalThursdayHours}</span>
+            <span>{totalFridayHours}</span>
+            <span>{totalSaturdayHours}</span>
+        </div>
       </div>
     </div>
   );
