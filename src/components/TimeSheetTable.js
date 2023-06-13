@@ -72,8 +72,8 @@ function TimeSheetTable({ instance, accounts }) {
     callDataverseWebAPI("cr303_chargecodes", accessToken)
       .then((data) => {
         const newProjects = data.value.map((project) => ({
-          name: project.cr303_name,
-          id: project.cr303_chargecodeid,
+          text: project.cr303_name,
+          key: project.cr303_chargecodeid,
         }));
 
         setProjects([...projects, ...newProjects]);

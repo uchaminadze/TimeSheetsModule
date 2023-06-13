@@ -1,3 +1,4 @@
+import './App.css'
 import React from 'react';
 import { PageLayout } from './components/PageLayout';
 import { useMsal } from '@azure/msal-react';

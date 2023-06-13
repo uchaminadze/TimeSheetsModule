@@ -1,0 +1,28 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+html, 
+body{
+    width: 100%;
+    height: 100vh;
+}
+
+
+.MuiTableCell-root{
+    border: 1px solid #DBDFE2;
+}
+
+
+.title-98,
+.title-138,
+.title-141,
+.title-142,
+.dropdown-118:focus::after,
+.dropdown-97:focus::after{
+    border: none;
+    outline: none;
+}

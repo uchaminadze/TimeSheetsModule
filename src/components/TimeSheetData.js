@@ -8,6 +8,14 @@ import {
 } from "../data/timeSheetData";
 import Project from "./Project";
 
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import { TableFooter, Typography } from "@mui/material";
+
 export const TimeSheetData = ({ projects }) => {
   const { timeSheetData } = useStore();
 
@@ -24,9 +32,8 @@ export const TimeSheetData = ({ projects }) => {
     const hours = getWeekDayHours(el);
     const comments = getWeekDayComments(el);
 
-    return { weekDayDates: weekDayDates, hours: hours, comments: comments };
+    return { weekDayDates, hours, comments };
   });
-
 
   const weekStart = new Date(cr303_sundaydate[0]);
   const weekStartMonth = weekStart.toLocaleString("default", {
@@ -40,89 +47,120 @@ export const TimeSheetData = ({ projects }) => {
 
   const formattedDate = `${weekStartMonth} ${weekStartDay} - ${weekEndMonth} ${weekEndDay}`;
 
+  const totalSundayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_sundayhours,
+    0
+  );
+  const totalMondayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_mondayhours,
+    0
+  );
+  const totalTuesdayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_tuesdayhours,
+    0
+  );
+  const totalWednesdayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_wednesdayhours,
+    0
+  );
+  const totalThursdayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_thursdayhours,
+    0
+  );
+  const totalFridayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_fridayhours,
+    0
+  );
+  const totalSaturdayHours = timeSheetData.reduce(
+    (sum, obj) => sum + obj.cr303_saturdayhours,
+    0
+  );
 
+  const allWorkedHours = [
+    totalSundayHours,
+    totalMondayHours,
+    totalTuesdayHours,
+    totalWednesdayHours,
+    totalThursdayHours,
+    totalFridayHours,
+    totalSaturdayHours,
+  ];
 
-  const totalSundayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_sundayhours, 0);
-  const totalMondayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_mondayhours, 0);
-  const totalTuesdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_tuesdayhours, 0);
-  const totalWednesdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_wednesdayhours, 0);
-  const totalThursdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_thursdayhours, 0);
-  const totalFridayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_fridayhours, 0);
-  const totalSaturdayHours = timeSheetData.reduce((sum, obj) => sum + obj.cr303_saturdayhours, 0);
+  const total = allWorkedHours.reduce((acc, curr) => {
+    return acc + curr;
+  }, 0);
 
+  const weekDayDates = mappedTimeSheetData[0].weekDayDates.map(
+    (sheet, index) => {
+      const slicedDay = sheet.slice(8, 10);
+      return slicedDay;
+    }
+  );
 
   return (
     <div>
-      <h3>Time Sheet Table</h3>
       <h5>{formattedDate}</h5>
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          {weekDayNames.map((day, index) => {
-            return (
-              <div key={index + 1}>
-                <div>
-                  <p>
-                    <strong>{day}</strong>
-                  </p>
+      <TableContainer sx={{ maxWidth: 1480 }}>
+        <Table aria-label="time sheet table">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Typography>Project</Typography>
+                  <Typography>Description</Typography>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          {mappedTimeSheetData[0].weekDayDates.map((sheet, index) => {
-            const slicedDay = sheet.slice(8, 10);
-            return (
-              <div key={index + 1}>
-                <p>{slicedDay}</p>
-              </div>
-            );
-          })}
-        </div>
-        {mappedTimeSheetData.map((sheet, index) => {
-            const sum = sheet.hours.reduce((acc, curr) => {
-                return acc + curr;
-              }, 0);
-          return (
-            <div
-              key={index + 1}
-              style={{ display: "flex", justifyContent: "space-between" }}
-            >
-              <div>
-                <Project projects={projects} />
-              </div>
-              {sheet.weekDayDates.map((day, index) => {
-                console.log(sheet);
+              </TableCell>
+              {weekDayNames.map((day, index) => {
                 return (
-                  <div key={index + 1}>
-                    <div>
-                      <p>{sheet.hours[index]}</p>
-                    </div>
-
-                    <div>
-                      <p style={{ width: "40px" }}>{sheet.comments[index]}</p>
-                    </div>
-                  </div>
+                  <TableCell key={index + 1} align="center">
+                    <Typography>{day}</Typography>
+                    <Typography>{weekDayDates[index]}</Typography>
+                  </TableCell>
                 );
               })}
-            <div>
-                <p>{sum}</p>
-            </div>
-            </div>
-          );
-        })}
-        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-            <p>Total work time:</p>
-
-            <span>{totalSundayHours}</span>
-            <span>{totalMondayHours}</span>
-            <span>{totalTuesdayHours}</span>
-            <span>{totalWednesdayHours}</span>
-            <span>{totalThursdayHours}</span>
-            <span>{totalFridayHours}</span>
-            <span>{totalSaturdayHours}</span>
-        </div>
-      </div>
+              <TableCell align="center">Total</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {mappedTimeSheetData.map((sheet, index) => {
+              const sum = sheet.hours.reduce((acc, curr) => {
+                return acc + curr;
+              }, 0);
+              return (
+                <TableRow key={index + 1}>
+                  <TableCell>
+                    <Project projects={projects} />
+                  </TableCell>
+                  {sheet.weekDayDates.map((day, index) => (
+                    <TableCell align="center" key={index + 1}>
+                      {sheet.hours[index]}
+                    </TableCell>
+                  ))}
+                  <TableCell align="center">{sum}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell
+                align="right"
+                sx={{ fontWeight: 600, color: "#373A3C" }}
+              >
+                Total work time
+              </TableCell>
+              <TableCell align="center">{totalSundayHours}</TableCell>
+              <TableCell align="center">{totalMondayHours}</TableCell>
+              <TableCell align="center">{totalTuesdayHours}</TableCell>
+              <TableCell align="center">{totalWednesdayHours}</TableCell>
+              <TableCell align="center">{totalThursdayHours}</TableCell>
+              <TableCell align="center">{totalFridayHours}</TableCell>
+              <TableCell align="center">{totalSaturdayHours}</TableCell>
+              <TableCell align="center">{total}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
     </div>
   );
 };
