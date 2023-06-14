@@ -4,7 +4,11 @@ import {devtools} from 'zustand/middleware'
 
 const useStore = create(devtools(set => ({
   timeSheetData: null,
-  setTimeSheetData: (timeSheetData) => set(() => ({timeSheetData: timeSheetData}))
+  weekStartDate: null,
+  weekId: null,
+  setTimeSheetData: (timeSheetData) => set(() => ({timeSheetData: timeSheetData})),
+  setWeekStartDate: (weekStartDate) => set(() => ({weekStartDate: weekStartDate})),
+  setWeekId: (weekId) => set(() => ({weekId: weekId}))
 })))
 
 

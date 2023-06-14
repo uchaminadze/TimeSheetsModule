@@ -35,18 +35,6 @@ export const TimeSheetData = ({ projects }) => {
     return { weekDayDates, hours, comments };
   });
 
-  const weekStart = new Date(cr303_sundaydate[0]);
-  const weekStartMonth = weekStart.toLocaleString("default", {
-    month: "short",
-  });
-  const weekStartDay = weekStart.getUTCDate();
-
-  const weekEnd = new Date(cr303_saturdaydate2[0]);
-  const weekEndMonth = weekEnd.toLocaleString("default", { month: "short" });
-  const weekEndDay = weekEnd.getUTCDate();
-
-  const formattedDate = `${weekStartMonth} ${weekStartDay} - ${weekEndMonth} ${weekEndDay}`;
-
   const totalSundayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_sundayhours,
     0
@@ -96,10 +84,10 @@ export const TimeSheetData = ({ projects }) => {
       return slicedDay;
     }
   );
+  
 
   return (
     <div>
-      <h5>{formattedDate}</h5>
       <TableContainer sx={{ maxWidth: 1480 }}>
         <Table aria-label="time sheet table">
           <TableHead>

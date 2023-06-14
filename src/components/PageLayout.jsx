@@ -19,16 +19,12 @@ export const PageLayout = (props) => {
     return (
         <>
             <nav>
-                <a href="/">
-                    Microsoft Identity Platform
-                </a>
+            <br />
+            <br />
                 <div>
                     {isAuthenticated ? <SignOutButton /> : <SignInButton />}
                 </div>
             </nav>
-            <h5>
-                Welcome to the Microsoft Authentication Library For Javascript - React Quickstart
-            </h5>
             <br />
             <br />
             {props.children}
