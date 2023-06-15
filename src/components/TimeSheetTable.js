@@ -5,22 +5,34 @@ import { callMsGraph } from "../api/graph";
 import { callDataverseWebAPI } from "../api/dataverse";
 import useStore from "../store/useStore";
 import WeeksPagination from "./WeeksPagination";
+import { Stack } from "@fluentui/react";
+import WeeksDropdown from "./WeeksDropdown";
 
 function TimeSheetTable({ instance, accounts }) {
-  const { timeSheetData, setTimeSheetData, weekStartDate } = useStore();
+  const { timeSheetData, setTimeSheetData, weekStartDate, setWeekStartDate, weekId, setWeekId } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
   const [currentYear, setCurrentYear] = useState("");
   const [currentWeekStartDate, setCurrentWeekStartDate] = useState("2023-01-08T05:00:00Z");
+  const [apiCalled, setApiCalled] = useState(false);
+
 
   useEffect(() => {
-    graphCall();
-    console.log(currentWeekStartDate);
+    if(!apiCalled){
+      console.log(apiCalled);
+      graphCall();
+      setApiCalled(true)
+    }
   }, []);
 
 
+  useEffect(() => {
+    if(weekId){
+      getExactTimeSheet();
+    }
+  }, [weekId])
 
 
   function graphCall() {
@@ -99,7 +111,13 @@ function getWeeks() {
   const accessToken = localStorage.getItem("accessToken");
   callDataverseWebAPI("cr303_weeks", accessToken)
     .then((data) => {
-      setWeeks(data.value)
+      const newWeeks = data.value.map((week) => ({
+        text: week.cr303_name,
+        date: week.cr303_startdate,
+        key: week.cr303_weekid,
+      }));
+
+      setWeeks([...weeks, ...newWeeks])
     })
     .catch((err) => console.log(err));
 }
@@ -125,15 +143,10 @@ function getExactWeek() {
   const accessToken = localStorage.getItem("accessToken");
   callDataverseWebAPI(`cr303_weeks?$filter=cr303_startdate eq ${weekStartDate}`, accessToken)
     .then((data) => {
-      localStorage.setItem(
-        "weekid",
-        data.value[0].cr303_weekid
-      );
-
+      setWeekId(data.value[0].cr303_weekid)
       setWeekStart(data.value[0].cr303_startdate);
       setWeekEnd(data.value[0].cr303_enddate);
       setCurrentYear(data.value[0].cr303_year);
-      getExactTimeSheet();
     })
     .catch((err) => console.log(err));
 }
@@ -144,10 +157,10 @@ function getExactWeek() {
 
   function getExactTimeSheet() {
     // and _cr303_week_value eq ${weekid}
-    const weekid = localStorage.getItem("weekid");
     const modifiedByValue = localStorage.getItem("modifiedByValue");
     const accessToken = localStorage.getItem("accessToken");
-    const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue} and _cr303_week_value eq ${weekid}`;
+    console.log(weekId);
+    const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue} and _cr303_week_value eq ${weekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
       .then((data) => setTimeSheetData(data.value))
       .catch((err) => console.log(err));
@@ -194,35 +207,64 @@ function getExactWeek() {
   // console.log(currentWeekStartDate);
   // }
 
-
-
-
-
-  const start = new Date(weekStart);
-  const weekStartMonth = start.toLocaleString("default", {
-    month: "short",
-  });
-  const weekStartDay = start.getUTCDate();
-
-  const end = new Date(weekEnd);
+  const getPreviousWeek = () => {
+    setApiCalled(false)
+    // setWeekStartDate("2023-01-01T05:00:00Z")
+            const currentDate = new Date(weekStartDate);
   
-  const weekEndMonth = end.toLocaleString("default", { month: "short" });
-  const weekEndDay = end.getUTCDate();
+    currentDate.setUTCHours(5, 0, 0, 0);
+    
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setUTCDate(currentDate.getUTCDate() - currentDate.getUTCDay());
+    
+    const previousWeekStart = new Date(startOfWeek);
+    previousWeekStart.setUTCDate(startOfWeek.getUTCDate() - 7);
+    
+    const formattedPreviousWeekStart = previousWeekStart.toISOString().split("T")[0] + "T05:00:00Z";
+  
+        setWeekStartDate(formattedPreviousWeekStart)
+  }
 
-  const formattedDate = `${weekStartMonth} ${weekStartDay} - ${weekEndMonth} ${weekEndDay}`;
 
-  // console.log("timeSheetData >>>>>>>>>>>>>>>>", timeSheetData)
+  const getNextWeek = () => {
+    setApiCalled(false)
+    // setWeekStartDate("2023-01-08T05:00:00Z")
+
+    const currentDate = new Date(weekStartDate);
+  
+    currentDate.setUTCHours(5, 0, 0, 0);
+    
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setUTCDate(currentDate.getUTCDate() - currentDate.getUTCDay());
+    
+    const previousWeekStart = new Date(startOfWeek);
+    previousWeekStart.setUTCDate(startOfWeek.getUTCDate() + 7);
+    
+    const formattedPreviousWeekStart = previousWeekStart.toISOString().split("T")[0] + "T05:00:00Z";
+  
+        setWeekStartDate(formattedPreviousWeekStart)
+  }
 
   return (
     <>
       <h4>Welcome {accounts[0].name}</h4>
       <br/>
       <br/>
-      <p>These are static dates for testing</p>
-      <br/>
-      <br/>
-      {timeSheetData && <WeeksPagination getExactWeek={getExactWeek} />}
-      <h5>{timeSheetData && `${formattedDate}, ${currentYear}`}</h5>
+      <Stack horizontal>
+        {timeSheetData && 
+          <WeeksPagination 
+            getExactWeek={getExactWeek}
+            apiCalled={apiCalled}
+            getPreviousWeek={getPreviousWeek}
+            getNextWeek={getNextWeek}
+            currentYear={currentYear}
+            weekStart={weekStart}
+            weekEnd={weekEnd}
+          />
+        }
+
+        <WeeksDropdown weeks={weeks} setApiCalled={setApiCalled}/>
+      </Stack>
       <br/>
       <br/>
       {timeSheetData && <TimeSheetData projects={projects}/>}

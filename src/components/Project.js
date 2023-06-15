@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { callDataverseWebAPI } from "../api/dataverse";
 import { Dropdown, initializeIcons } from "@fluentui/react";
-import { Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 
 function Project({ projects }) {
   const [projectDescription, setProjectDescription] = useState('');
@@ -20,24 +20,24 @@ function Project({ projects }) {
 
 
 
-  const dropDownStyles = {
+  const dropdownStyles = {
     dropdown: {width: 170}
   }
 
 
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <Stack direction="row" spacing={10}>
         <Dropdown 
           placeholder="Select a project"
           options={projects}
           responsiveMode={2}
           onChange={onChangeHandler}
-          styles={dropDownStyles}
+          styles={dropdownStyles}
         />
 
-        <Typography>{projectDescription}</Typography>
-    </div>
+        <Typography>{projectDescription ? projectDescription : "Description"}</Typography>
+    </Stack>
   );
 }
 
