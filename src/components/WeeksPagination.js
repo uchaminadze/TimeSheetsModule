@@ -1,10 +1,23 @@
 import { useEffect } from "react";
 import { callDataverseWebAPI } from "../api/dataverse";
 import useStore from "../store/useStore";
-import { Stack } from "@fluentui/react";
+import { DefaultButton, Stack, initializeIcons } from "@fluentui/react";
+import { Typography } from "@mui/material";
+import { Icon } from '@fluentui/react/lib/Icon';
 
-function WeeksPagination({getExactWeek, apiCalled, getPreviousWeek, getNextWeek, currentYear, weekStart, weekEnd}){
-  const {weekStartDate, setWeekStartDate, setWeekId} = useStore();
+function WeeksPagination({
+  getExactWeek, 
+  getPreviousWeek, 
+  getNextWeek, 
+  currentYear, 
+  weekStart, 
+  weekEnd
+}){
+  const {weekStartDate, setWeekStartDate, setWeekId, apiCalled} = useStore();
+
+  initializeIcons()
+
+
     useEffect(() => {
       if(!apiCalled){
         getExactWeek();
@@ -47,11 +60,28 @@ function WeeksPagination({getExactWeek, apiCalled, getPreviousWeek, getNextWeek,
   
     const formattedDate = `${weekStartMonth} ${weekStartDay} - ${weekEndMonth} ${weekEndDay}`;
 
+
+    const styles = {
+      root: {
+        border: "none",
+        padding: 0,
+        minWidth: 30,
+        "& :hover": {
+          backgroundColor: "white" 
+        }
+      }
+    }
+
+
     return(
       <Stack horizontal>
-        <button onClick={() => getPreviousWeek()}>Previous week</button>
-        <button onClick={() => getNextWeek()}>Next week</button>
-        <h4>{formattedDate}, {currentYear}</h4>
+        <DefaultButton styles={styles} onClick={() => getPreviousWeek()}>
+          <Icon iconName="ChevronLeftMed"/>
+        </DefaultButton>
+        <DefaultButton styles={styles} onClick={() => getNextWeek()}>
+          <Icon iconName="ChevronRightMed"/>
+        </DefaultButton>
+        <Typography alignSelf="center">{formattedDate}, {currentYear}</Typography>
       </Stack>
     )
 }

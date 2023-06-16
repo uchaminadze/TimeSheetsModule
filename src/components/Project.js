@@ -2,41 +2,41 @@ import React, { useState } from "react";
 import { callDataverseWebAPI } from "../api/dataverse";
 import { Dropdown, initializeIcons } from "@fluentui/react";
 import { Stack, Typography } from "@mui/material";
+import { useEffect } from "react";
+import useStore from "../store/useStore";
 
 function Project({ projects }) {
-  const [projectDescription, setProjectDescription] = useState('');
+  const {projectId, setProjectId, projectDescription} = useStore();
     
   initializeIcons()
 
 
   const onChangeHandler = (event, option) => {
     if(option){
-      const accessToken = localStorage.getItem("accessToken");
-      callDataverseWebAPI(`cr303_chargecodes(${option.key})`, accessToken)
-        .then((data) => setProjectDescription(data.mw_description))
-        .catch((err) => console.log(err));
+      setProjectId(option.key)
     }
-  }
+}
 
 
 
   const dropdownStyles = {
-    dropdown: {width: 170}
+    dropdown: {width: 170},
   }
 
 
 
   return (
-    <Stack direction="row" spacing={10}>
-        <Dropdown 
-          placeholder="Select a project"
+    <Stack direction="row" spacing={10} alignItems="center">
+        <Dropdown
+          placeholder={!projectId && "Select a project"}
           options={projects}
           responsiveMode={2}
           onChange={onChangeHandler}
           styles={dropdownStyles}
+          selectedKey={projectId}
         />
 
-        <Typography>{projectDescription ? projectDescription : "Description"}</Typography>
+        <Typography sx={{fontSize: 14, }}>{projectDescription && projectId ? projectDescription : "Description"}</Typography>
     </Stack>
   );
 }

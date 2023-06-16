@@ -2,8 +2,8 @@ import { Dropdown, initializeIcons } from "@fluentui/react";
 import React from "react";
 import useStore from "../store/useStore";
 
-function WeeksDropdown({ weeks,setApiCalled }) {
-    const {setWeekId, setWeekStartDate} = useStore()
+function WeeksDropdown({ weeks }) {
+    const {weekId, setWeekId, setWeekStartDate, setApiCalled, selectedWeek} = useStore();
 
     initializeIcons()
 
@@ -21,10 +21,11 @@ function WeeksDropdown({ weeks,setApiCalled }) {
 
   return (
     <Dropdown
-      placeholder="Weeks"
+    //   placeholder="Weeks"
       options={weeks}
       responsiveMode={2}
       onChange={onChangeHandler}
+      selectedKey={weekId}
     //   styles={dropdownStyles}
     />
   );

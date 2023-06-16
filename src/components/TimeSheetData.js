@@ -14,19 +14,14 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { TableFooter, Typography } from "@mui/material";
+import { Stack, TableFooter, Typography } from "@mui/material";
 
 export const TimeSheetData = ({ projects }) => {
-  const { timeSheetData } = useStore();
+  const {projectId, timeSheetData } = useStore();
 
-  const cr303_sundaydate = timeSheetData.map((el) => {
-    return el.cr303_sundaydate;
-  });
 
-  const cr303_saturdaydate2 = timeSheetData.map((el) => {
-    return el.cr303_saturdaydate2;
-  });
-
+  
+  
   const mappedTimeSheetData = timeSheetData.map((el) => {
     const weekDayDates = getWeekDayDates(el);
     const hours = getWeekDayHours(el);
@@ -46,7 +41,7 @@ export const TimeSheetData = ({ projects }) => {
   const totalTuesdayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_tuesdayhours,
     0
-  );
+    );
   const totalWednesdayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_wednesdayhours,
     0
@@ -77,15 +72,27 @@ export const TimeSheetData = ({ projects }) => {
   const total = allWorkedHours.reduce((acc, curr) => {
     return acc + curr;
   }, 0);
-
+  
   const weekDayDates = mappedTimeSheetData[0].weekDayDates.map(
     (sheet, index) => {
       const slicedDay = sheet.slice(8, 10);
       return slicedDay;
     }
-  );
-  
+    );
 
+
+    
+  const timeSheetStatus = timeSheetData[0].cr303_timesheetstatus;
+
+
+  const statusLabels = {
+    824660000: "Draft",
+    824660001: "Submitted",
+    124740001: "Approved",
+    124740002: "Rejected"
+  };
+
+    
   return (
     <div>
       <TableContainer sx={{ maxWidth: 1480 }}>
@@ -93,23 +100,33 @@ export const TimeSheetData = ({ projects }) => {
           <TableHead>
             <TableRow>
               <TableCell>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Typography>Project</Typography>
-                  <Typography>Description</Typography>
-                </div>
+                <Stack direction="row" spacing={23.1}>
+                  <Typography sx={{fontSize: 20}}>Project</Typography>
+                  <Typography sx={{fontSize: 20}}>Description</Typography>
+                </Stack>
               </TableCell>
               {weekDayNames.map((day, index) => {
                 return (
                   <TableCell key={index + 1} align="center">
-                    <Typography>{day}</Typography>
-                    <Typography>{weekDayDates[index]}</Typography>
+                    <Typography sx={{fontSize: 14}}>{day}</Typography>
+                    <Typography sx={{fontSize: 32}}>{weekDayDates[index]}</Typography>
                   </TableCell>
                 );
               })}
-              <TableCell align="center">Total</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">Total</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
+            {/* <TableRow>
+            <TableCell>
+              {projectId.map((p) => (
+
+                <Project key={p} projects={projects} p={p}/>
+              ))}
+            </TableCell>
+
+            </TableRow> */}
             {mappedTimeSheetData.map((sheet, index) => {
               const sum = sheet.hours.reduce((acc, curr) => {
                 return acc + curr;
@@ -117,14 +134,21 @@ export const TimeSheetData = ({ projects }) => {
               return (
                 <TableRow key={index + 1}>
                   <TableCell>
-                    <Project projects={projects} />
+                    <Project projects={projects}/>
                   </TableCell>
                   {sheet.weekDayDates.map((day, index) => (
-                    <TableCell align="center" key={index + 1}>
+                    <TableCell align="center" sx={{
+                      fontSize: 20, 
+                      position: "relative",
+                      cursor: "pointer"
+                    }} key={index + 1}>
                       {sheet.hours[index]}
                     </TableCell>
                   ))}
-                  <TableCell align="center">{sum}</TableCell>
+                  <TableCell sx={{fontSize: 20}} align="center">{sum}</TableCell>
+                  <TableCell sx={{fontSize: 20}} align="center">
+                    {statusLabels[timeSheetStatus] || ""}
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -133,18 +157,18 @@ export const TimeSheetData = ({ projects }) => {
             <TableRow>
               <TableCell
                 align="right"
-                sx={{ fontWeight: 600, color: "#373A3C" }}
+                sx={{ fontWeight: 600, color: "#373A3C", fontSize: 20 }}
               >
                 Total work time
               </TableCell>
-              <TableCell align="center">{totalSundayHours}</TableCell>
-              <TableCell align="center">{totalMondayHours}</TableCell>
-              <TableCell align="center">{totalTuesdayHours}</TableCell>
-              <TableCell align="center">{totalWednesdayHours}</TableCell>
-              <TableCell align="center">{totalThursdayHours}</TableCell>
-              <TableCell align="center">{totalFridayHours}</TableCell>
-              <TableCell align="center">{totalSaturdayHours}</TableCell>
-              <TableCell align="center">{total}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalSundayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalMondayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalTuesdayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalWednesdayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalThursdayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalFridayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{totalSaturdayHours}</TableCell>
+              <TableCell sx={{fontSize: 20}} align="center">{total}</TableCell>
             </TableRow>
           </TableFooter>
         </Table>

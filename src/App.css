@@ -21,8 +21,14 @@ body{
 .title-139,
 .title-142,
 .title-143,
+.title-120,
 .dropdown-118:focus::after,
 .dropdown-97:focus::after{
-    border: none;
-    outline: none;
+    border: none !important;
+    outline: none !important;
+}
+
+
+.dropdown-119{
+    font-size: 14px;
 }
