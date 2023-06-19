@@ -1,21 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { callDataverseWebAPI } from "../api/dataverse";
 import { Dropdown, initializeIcons } from "@fluentui/react";
 import { Stack, Typography } from "@mui/material";
-import { useEffect } from "react";
 import useStore from "../store/useStore";
 
-function Project({ projects }) {
-  const {projectId, setProjectId, projectDescription} = useStore();
+function Project({ projects, p }) {
+  const {projectId, selectedProjectId, setProjectId} = useStore();
+  const [selectedKey, setSelectedKey] = useState(p);
+  const [changeSelectedDescription, setChangeSelectedDescription] = useState('');
     
   initializeIcons()
 
+  console.log(p);
+  const handleDropdownChange = (event, option) => {
+    setSelectedKey(option.key);
+    setChangeSelectedDescription(option.description);
+  };
 
-  const onChangeHandler = (event, option) => {
-    if(option){
-      setProjectId(option.key)
-    }
-}
+
+useEffect(() => {
+  const selectedOption = projects.find(option => option.key === p);
+  setChangeSelectedDescription(selectedOption?.description);
+}, [])
 
 
 
@@ -23,20 +29,18 @@ function Project({ projects }) {
     dropdown: {width: 170},
   }
 
-
-
   return (
     <Stack direction="row" spacing={10} alignItems="center">
         <Dropdown
-          placeholder={!projectId && "Select a project"}
+          placeholder={!p && "Select a project"}
           options={projects}
           responsiveMode={2}
-          onChange={onChangeHandler}
+          onChange={handleDropdownChange}
           styles={dropdownStyles}
-          selectedKey={projectId}
+          selectedKey={selectedKey}
         />
 
-        <Typography sx={{fontSize: 14, }}>{projectDescription && projectId ? projectDescription : "Description"}</Typography>
+        <Typography sx={{fontSize: 14}}>{changeSelectedDescription ? changeSelectedDescription : "Description"}</Typography>
     </Stack>
   );
 }

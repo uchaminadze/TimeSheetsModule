@@ -22,6 +22,7 @@ function TimeSheetTable({ instance, accounts }) {
     setProjectId,
     projectDescription,
     setProjectDescription,
+    setUniqueId
   } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
@@ -43,11 +44,11 @@ function TimeSheetTable({ instance, accounts }) {
     }
   }, [weekId]);
 
-  useEffect(() => {
-    if (projectId) {
-      getExactProject();
-    }
-  }, [projectId]);
+  // useEffect(() => {
+  //   if (projectId) {
+  //     getExactProject();
+  //   }
+  // }, [projectId]);
 
   function graphCall() {
     instance
@@ -153,9 +154,12 @@ function TimeSheetTable({ instance, accounts }) {
           return c._cr303_chargecode_value
         })
         
-        setProjectId(data.value[0]._cr303_chargecode_value);
-        // setProjectId(projectIdArray);
-        console.log(projectIdArray);
+        const timestamp = new Date().getTime(); // Get current timestamp
+        const id = timestamp.toString();
+        setUniqueId(id)
+
+        // setProjectId(data.value[0]._cr303_chargecode_value);
+        setProjectId(projectIdArray);
       })
       .catch((err) => console.log(err));
   }
@@ -167,6 +171,7 @@ function TimeSheetTable({ instance, accounts }) {
         const newProjects = data.value.map((project) => ({
           text: project.cr303_name,
           key: project.cr303_chargecodeid,
+          description: project.mw_description
         }));
 
         setProjects([...projects, ...newProjects]);
@@ -174,18 +179,27 @@ function TimeSheetTable({ instance, accounts }) {
       .catch((err) => console.log(err));
   }
 
-  const getExactProject = () => {
-    const accessToken = localStorage.getItem("accessToken");
+  // const getExactProject = () => {
+  //   const accessToken = localStorage.getItem("accessToken");
 
-      callDataverseWebAPI(`cr303_chargecodes(${projectId})`, accessToken)
-        .then((data) => {
-          // const projectDescriptionArray = [data.mw_description];  
-          // console.log(projectDescriptionArray);
+  //     projectId.map((p) => (
+  //       callDataverseWebAPI(`cr303_chargecodes${p !== null ? `(${p})` : ""}`, accessToken)
+  //       .then((data) => {
+  //         const singleProject = {
+  //           text: data.cr303_name,
+  //           key: data.cr303_chargecodeid,
+  //           description: data.mw_description
+  //         }
 
-          setProjectDescription(data.mw_description);
-        })
-        .catch((err) => console.log(err))
-  };
+  //         console.log("week id >>>>>>>>>>>>>>>>>>>>>>>", weekId);
+
+  //         setSingleProjects([...singleProjects, singleProject])
+          
+  //         setProjectDescription(data.mw_description);
+  //       })
+  //       .catch((err) => console.log(err))
+  //     ))
+  // };
 
   const getPreviousWeek = () => {
     setApiCalled(false);
@@ -246,6 +260,9 @@ function TimeSheetTable({ instance, accounts }) {
       <br />
       <br />
       {timeSheetData && <TimeSheetData projects={projects} />}
+      <br />
+      <br />
+      <button>Submit</button>
     </>
   );
 }

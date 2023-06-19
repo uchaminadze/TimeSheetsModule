@@ -17,7 +17,7 @@ import TableRow from "@mui/material/TableRow";
 import { Stack, TableFooter, Typography } from "@mui/material";
 
 export const TimeSheetData = ({ projects }) => {
-  const {projectId, timeSheetData } = useStore();
+  const { projectId, timeSheetData, uniqueId } = useStore();
 
 
   
@@ -92,6 +92,7 @@ export const TimeSheetData = ({ projects }) => {
     124740002: "Rejected"
   };
 
+
     
   return (
     <div>
@@ -118,27 +119,19 @@ export const TimeSheetData = ({ projects }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* <TableRow>
-            <TableCell>
-              {projectId.map((p) => (
-
-                <Project key={p} projects={projects} p={p}/>
-              ))}
-            </TableCell>
-
-            </TableRow> */}
             {mappedTimeSheetData.map((sheet, index) => {
               const sum = sheet.hours.reduce((acc, curr) => {
                 return acc + curr;
               }, 0);
+              console.log(sheet.hours[index] + 1);
               return (
                 <TableRow key={index + 1}>
                   <TableCell>
-                    <Project projects={projects}/>
+                      <Project key={uniqueId + 1} projects={projects} p={[...projectId][index]}/>
                   </TableCell>
                   {sheet.weekDayDates.map((day, index) => (
                     <TableCell align="center" sx={{
-                      fontSize: 20, 
+                      fontSize: 20,
                       position: "relative",
                       cursor: "pointer"
                     }} key={index + 1}>

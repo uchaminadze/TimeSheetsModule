@@ -8,14 +8,20 @@ const useStore = create(devtools(set => ({
   weekId: null,
   selectedWeek: null,
   projectId: null,
+  selectedProjectId: "",
   projectDescription: "",
+  projects: null,
   apiCalled: false,
+  uniqueId: null,
   setTimeSheetData: (timeSheetData) => set(() => ({timeSheetData: timeSheetData})),
   setWeekStartDate: (weekStartDate) => set(() => ({weekStartDate: weekStartDate})),
   setWeekId: (weekId) => set(() => ({weekId: weekId})),
   setSelectedWeek: (selectedWeek) => set(() => ({selectedWeek: selectedWeek})),
   setProjectId: (projectId) => set(() => ({projectId: projectId})),
+  setSelectedProjectId: (selectedProjectId) => set(() => ({selectedProjectId: selectedProjectId})),
   setProjectDescription: (projectDescription) => set(() => ({projectDescription: projectDescription})),
+  setProjects: (projects) => set(() => ({projects: projects})),
+  setUniqueId: (uniqueId) => set(() => ({uniqueId: uniqueId})),
   setApiCalled: (apiCalled) => set(() => ({apiCalled: apiCalled}))
 })))
 
