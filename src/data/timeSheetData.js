@@ -71,6 +71,27 @@ export const getWeekDayComments = (timeSheetData) => {
 
 
 
+export const getTimeSheetStatus = (timeSheetData) =>{
+    const {
+        cr303_timesheetstatus
+    } = timeSheetData || {};
+
+
+    return cr303_timesheetstatus
+}
+
+
+
+
+export const statusLabels = {
+    824660000: "Draft",
+    824660001: "Submitted",
+    124740001: "Approved",
+    124740002: "Rejected"
+};
+
+
+
 export const weekDayNames = [
     "Sun",
     "Mon",

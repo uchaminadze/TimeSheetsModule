@@ -5,7 +5,7 @@ import { callMsGraph } from "../api/graph";
 import { callDataverseWebAPI } from "../api/dataverse";
 import useStore from "../store/useStore";
 import WeeksPagination from "./WeeksPagination";
-import { Stack } from "@fluentui/react";
+import { PrimaryButton, Stack } from "@fluentui/react";
 import WeeksDropdown from "./WeeksDropdown";
 
 function TimeSheetTable({ instance, accounts }) {
@@ -29,6 +29,8 @@ function TimeSheetTable({ instance, accounts }) {
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
   const [currentYear, setCurrentYear] = useState("");
+  const [timeSheetIds, setTimeSheetIds] = useState([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     if (!apiCalled) {
@@ -36,34 +38,35 @@ function TimeSheetTable({ instance, accounts }) {
       graphCall();
       setApiCalled(true);
     }
+    
   }, []);
-
+  
   useEffect(() => {
     if (weekId) {
-      getExactTimeSheet();
+      getTimeSheets();
     }
-  }, [weekId]);
-
+  }, [weekId, isSubmitted]);
+  
   // useEffect(() => {
-  //   if (projectId) {
-  //     getExactProject();
-  //   }
-  // }, [projectId]);
-
-  function graphCall() {
-    instance
-      .acquireTokenSilent({
-        ...loginRequest,
-        account: accounts[0],
-      })
-      .then((response) => {
-        callMsGraph(response.accessToken)
+    //   if (projectId) {
+      //     getExactProject();
+      //   }
+      // }, [projectId]);
+      
+      function graphCall() {
+        instance
+        .acquireTokenSilent({
+          ...loginRequest,
+          account: accounts[0],
+        })
+        .then((response) => {
+          callMsGraph(response.accessToken)
           .then((response) => {
             localStorage.setItem(
               "userEmail",
               response.userPrincipalName.toLowerCase()
-            );
-
+              );
+              
             dataverseCall();
           })
           .catch((err) => console.log(err));
@@ -140,7 +143,7 @@ function TimeSheetTable({ instance, accounts }) {
       .catch((err) => console.log(err));
   }
 
-  function getExactTimeSheet() {
+  function getTimeSheets() {
     const modifiedByValue = localStorage.getItem("modifiedByValue");
     const accessToken = localStorage.getItem("accessToken");
     console.log(weekId);
@@ -149,7 +152,19 @@ function TimeSheetTable({ instance, accounts }) {
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
       .then((data) => {
         setTimeSheetData(data.value);
-        
+        console.log(timeSheetData);
+
+        const timesheetIDs = [];
+
+        data.value.forEach((sheet) => {
+          if(sheet.cr303_timesheetstatus === 824660000) {
+            timesheetIDs.push(sheet.cr303_timesheetid)
+          }
+        })
+
+
+        setTimeSheetIds(timesheetIDs)
+
         const projectIdArray = data.value.map((c) => {
           return c._cr303_chargecode_value
         })
@@ -238,6 +253,31 @@ function TimeSheetTable({ instance, accounts }) {
     setWeekStartDate(formattedPreviousWeekStart);
   };
 
+
+
+  function submitTimeSheets() {
+    const accessToken = localStorage.getItem("accessToken");
+    timeSheetIds.forEach((id) => {
+      fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets(${id})`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          cr303_timesheetstatus: 824660001
+        })
+      })
+        .then((resp) => {
+          if(resp.status === 204){
+            console.log("Submitted successfully");
+            setIsSubmitted(true)
+          }
+        })
+        .catch((error) => console.log(error))
+    })
+  }
+
   return (
     <>
       <h4>Welcome {accounts[0].name}</h4>
@@ -262,7 +302,7 @@ function TimeSheetTable({ instance, accounts }) {
       {timeSheetData && <TimeSheetData projects={projects} />}
       <br />
       <br />
-      <button>Submit</button>
+      <PrimaryButton onClick={submitTimeSheets}>Submit</PrimaryButton>
     </>
   );
 }

@@ -4,7 +4,7 @@ import { Dropdown, initializeIcons } from "@fluentui/react";
 import { Stack, Typography } from "@mui/material";
 import useStore from "../store/useStore";
 
-function Project({ projects, p }) {
+function Project({ projects, p, status }) {
   const {projectId, selectedProjectId, setProjectId} = useStore();
   const [selectedKey, setSelectedKey] = useState(p);
   const [changeSelectedDescription, setChangeSelectedDescription] = useState('');
@@ -38,6 +38,7 @@ useEffect(() => {
           onChange={handleDropdownChange}
           styles={dropdownStyles}
           selectedKey={selectedKey}
+          disabled={status !== 824660000}
         />
 
         <Typography sx={{fontSize: 14}}>{changeSelectedDescription ? changeSelectedDescription : "Description"}</Typography>
