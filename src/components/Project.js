@@ -11,7 +11,6 @@ function Project({ projects, p, status }) {
     
   initializeIcons()
 
-  console.log(p);
   const handleDropdownChange = (event, option) => {
     setSelectedKey(option.key);
     setChangeSelectedDescription(option.description);

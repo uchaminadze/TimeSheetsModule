@@ -17,13 +17,20 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { Stack, TableFooter, TextField, Typography } from "@mui/material";
+import { DefaultButton } from "@fluentui/react";
 
 export const TimeSheetData = ({ projects }) => {
-  const { projectId, timeSheetData, uniqueId } = useStore();
+  const {
+    projectId,
+    timeSheetData,
+    uniqueId,
+    modifiedTimeSheetData,
+    setModifiedTimeSheetData,
+  } = useStore();
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
+  const [cellValue, setCellValue] = useState();
 
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tableRef.current && !tableRef.current.contains(event.target)) {
@@ -31,22 +38,41 @@ export const TimeSheetData = ({ projects }) => {
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
 
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    const mappedTimeSheetData = timeSheetData.map((el) => {
+      const weekDayDates = getWeekDayDates(el);
+      const hours = getWeekDayHours(el);
+      const comments = getWeekDayComments(el);
+      const timeSheetStatus = getTimeSheetStatus(el);
+
+      return { weekDayDates, hours, comments, timeSheetStatus };
+    });
 
 
-  const mappedTimeSheetData = timeSheetData.map((el) => {
-    const weekDayDates = getWeekDayDates(el);
-    const hours = getWeekDayHours(el);
-    const comments = getWeekDayComments(el);
-    const timeSheetStatus = getTimeSheetStatus(el)
+    const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
+      return array2.hours.map(function(value, index) {
+        return value + (array1[index] || 0);
+      }, 0);
+    }, []);
 
-    return { weekDayDates, hours, comments, timeSheetStatus };
-  });
+    console.log(result);
+    
+    setModifiedTimeSheetData(mappedTimeSheetData);
+  }, [timeSheetData]);
+
+
+
+  useEffect(() => {
+    console.log(modifiedTimeSheetData);
+  }, [modifiedTimeSheetData])
+
 
   const totalSundayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_sundayhours,
@@ -59,7 +85,7 @@ export const TimeSheetData = ({ projects }) => {
   const totalTuesdayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_tuesdayhours,
     0
-    );
+  );
   const totalWednesdayHours = timeSheetData.reduce(
     (sum, obj) => sum + obj.cr303_wednesdayhours,
     0
@@ -84,28 +110,27 @@ export const TimeSheetData = ({ projects }) => {
     totalWednesdayHours,
     totalThursdayHours,
     totalFridayHours,
-    totalSaturdayHours
+    totalSaturdayHours,
   ];
 
   const total = allWorkedHours.reduce((acc, curr) => {
     return acc + curr;
   }, 0);
-  
-  const weekDayDates = mappedTimeSheetData[0].weekDayDates.map(
-    (sheet, index) => {
-      const slicedDay = sheet.slice(8, 10);
-      return slicedDay;
-    }
-    );
+
+  const onClickHandler = (rowIndex, cellIndex) => {
+    setCellEdit({ rowIndex, cellIndex });
+  };
 
 
+  const onChangeHandler = (e, rowIndex, cellIndex) =>{
+    const value = Number(e.target.value);
+    const newValue = value <= 0 ? 0 : value;
 
-    const onClickHandler = (rowIndex, cellIndex) => {
-      setCellEdit({rowIndex, cellIndex})
-    }
+    const updatedCell = [...modifiedTimeSheetData];
+    updatedCell[rowIndex].hours[cellIndex] = newValue;
+    setModifiedTimeSheetData(updatedCell);
+  }
 
-
-    
   return (
     <div>
       <TableContainer sx={{ maxWidth: 1480 }}>
@@ -114,52 +139,86 @@ export const TimeSheetData = ({ projects }) => {
             <TableRow>
               <TableCell>
                 <Stack direction="row" spacing={23.1}>
-                  <Typography sx={{fontSize: 20}}>Project</Typography>
-                  <Typography sx={{fontSize: 20}}>Description</Typography>
+                  <Typography sx={{ fontSize: 20 }}>Project</Typography>
+                  <Typography sx={{ fontSize: 20 }}>Description</Typography>
                 </Stack>
               </TableCell>
-              {weekDayNames.map((day, index) => {
-                return (
-                  <TableCell key={index + 1} align="center">
-                    <Typography sx={{fontSize: 14}}>{day}</Typography>
-                    <Typography sx={{fontSize: 32}}>{weekDayDates[index]}</Typography>
-                  </TableCell>
-                );
-              })}
-              <TableCell sx={{fontSize: 20}} align="center">Total</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">Status</TableCell>
+              {modifiedTimeSheetData &&
+                modifiedTimeSheetData[0]?.weekDayDates.map((sheet, index) => {
+                  const slicedDay = sheet.slice(8, 10);
+                  return (
+                    <TableCell key={index + 1} align="center">
+                      <Typography sx={{ fontSize: 14 }}>
+                        {weekDayNames[index]}
+                      </Typography>
+                      <Typography sx={{ fontSize: 32 }}>{slicedDay}</Typography>
+                    </TableCell>
+                  );
+                })}
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                Total
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                Status
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody ref={tableRef}>
-            {mappedTimeSheetData.map((sheet, rowIndex) => {
-              const sum = sheet.hours.reduce((acc, curr) => {
-                return acc + curr;
-              }, 0);
-              return (
-                <TableRow key={rowIndex + 1}>
-                  <TableCell>
-                      <Project key={uniqueId + 1} projects={projects} p={[...projectId][rowIndex]} status={sheet.timeSheetStatus}/>
-                  </TableCell>
-                  {sheet.weekDayDates.map((day, cellIndex) => (
-                    <TableCell align="center" sx={{
-                      fontSize: 20,
-                      position: "relative",
-                      cursor: "pointer",
-                    }} key={cellIndex + 1} onClick={() => onClickHandler(rowIndex, cellIndex)}>
-                      {cellEdit?.rowIndex === rowIndex && cellEdit?.cellIndex === cellIndex ? (
-                        <TextField type="number" defaultValue={sheet.hours[cellIndex]} autoFocus/>
-                      ) : (
-                        sheet.hours[cellIndex]
-                      )}
+            {modifiedTimeSheetData &&
+              modifiedTimeSheetData.map((sheet, rowIndex) => {
+                const sum = sheet.hours.reduce((acc, curr) => {
+                  return acc + curr;
+                }, 0);
+                return (
+                  <TableRow key={rowIndex + 1}>
+                    <TableCell>
+                      <Project
+                        key={uniqueId + 1}
+                        projects={projects}
+                        p={[...projectId][rowIndex]}
+                        status={sheet.timeSheetStatus}
+                      />
                     </TableCell>
-                  ))}
-                  <TableCell sx={{fontSize: 20}} align="center">{sum > 0 ? sum : ""}</TableCell>
-                  <TableCell sx={{fontSize: 20}} align="center">
-                    {statusLabels[sheet.timeSheetStatus]}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    {sheet.weekDayDates.map((day, cellIndex) => {
+                      
+                      return (
+                        <TableCell
+                          align="center"
+                          sx={{
+                            fontSize: 20,
+                            position: "relative",
+                            cursor:
+                              sheet.timeSheetStatus === 824660000
+                                ? "pointer"
+                                : "auto",
+                          }}
+                          key={cellIndex + 1}
+                          onClick={() => onClickHandler(rowIndex, cellIndex)}
+                        >
+                          {cellEdit?.rowIndex === rowIndex &&
+                          cellEdit?.cellIndex === cellIndex &&
+                          sheet.timeSheetStatus === 824660000 ? (
+                            <TextField
+                              type="number"
+                              defaultValue={sheet.hours[cellIndex]}
+                              onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
+                              autoFocus
+                            />
+                          ) : (
+                            sheet.hours[cellIndex] > 0 ? sheet.hours[cellIndex] : ""
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell sx={{ fontSize: 20 }} align="center">
+                      {sum > 0 ? sum : ""}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: 20 }} align="center">
+                      {statusLabels[sheet.timeSheetStatus]}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
           <TableFooter>
             <TableRow>
@@ -169,14 +228,30 @@ export const TimeSheetData = ({ projects }) => {
               >
                 Total work time
               </TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalSundayHours > 0 ? totalSundayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalMondayHours > 0 ? totalMondayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalTuesdayHours > 0 ? totalTuesdayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalWednesdayHours > 0 ? totalWednesdayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalThursdayHours > 0 ? totalThursdayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalFridayHours > 0 ? totalFridayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{totalSaturdayHours > 0 ? totalSaturdayHours : ""}</TableCell>
-              <TableCell sx={{fontSize: 20}} align="center">{total > 0 ? total : ""}</TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalSundayHours > 0 ? totalSundayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalMondayHours > 0 ? totalMondayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalTuesdayHours > 0 ? totalTuesdayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalWednesdayHours > 0 ? totalWednesdayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalThursdayHours > 0 ? totalThursdayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalFridayHours > 0 ? totalFridayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {totalSaturdayHours > 0 ? totalSaturdayHours : ""}
+              </TableCell>
+              <TableCell sx={{ fontSize: 20 }} align="center">
+                {total > 0 ? total : ""}
+              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>

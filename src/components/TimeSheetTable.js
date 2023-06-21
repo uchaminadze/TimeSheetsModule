@@ -5,8 +5,10 @@ import { callMsGraph } from "../api/graph";
 import { callDataverseWebAPI } from "../api/dataverse";
 import useStore from "../store/useStore";
 import WeeksPagination from "./WeeksPagination";
-import { PrimaryButton, Stack } from "@fluentui/react";
+import { DefaultButton, PrimaryButton, Stack } from "@fluentui/react";
 import WeeksDropdown from "./WeeksDropdown";
+import AddTimeSheetRow from "./AddTimeSheetRow";
+import SubmitTimeSheet from "./SubmitTimeSheet";
 
 function TimeSheetTable({ instance, accounts }) {
   const {
@@ -255,7 +257,7 @@ function TimeSheetTable({ instance, accounts }) {
 
 
 
-  function submitTimeSheets() {
+  function submitTimeSheet() {
     const accessToken = localStorage.getItem("accessToken");
     timeSheetIds.forEach((id) => {
       fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets(${id})`, {
@@ -276,6 +278,27 @@ function TimeSheetTable({ instance, accounts }) {
         })
         .catch((error) => console.log(error))
     })
+  }
+
+
+  function saveTimeSheets(){
+    const accessToken = localStorage.getItem("accessToken");
+    fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          cr303_tuesdayhours: 8.0000000000
+        })
+      })
+        .then((resp) => {
+          if(resp.status === 201){
+            console.log("Submitted successfully");
+          }
+        })
+        .catch((error) => console.log(error))
   }
 
   return (
@@ -302,7 +325,15 @@ function TimeSheetTable({ instance, accounts }) {
       {timeSheetData && <TimeSheetData projects={projects} />}
       <br />
       <br />
-      <PrimaryButton onClick={submitTimeSheets}>Submit</PrimaryButton>
+      <Stack horizontal horizontalAlign="space-between">
+        <Stack.Item>
+          <AddTimeSheetRow/>
+        </Stack.Item>
+        <Stack.Item>
+          <DefaultButton styles={{root: {marginRight: 10}}} onClick={saveTimeSheets}>Save</DefaultButton>
+          <SubmitTimeSheet submitTimeSheet={submitTimeSheet}/>
+        </Stack.Item>
+      </Stack>
     </>
   );
 }
