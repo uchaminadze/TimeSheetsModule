@@ -4,8 +4,8 @@ import { Dropdown, initializeIcons } from "@fluentui/react";
 import { Stack, Typography } from "@mui/material";
 import useStore from "../store/useStore";
 
-function Project({ projects, p, status }) {
-  const {projectId, selectedProjectId, setProjectId} = useStore();
+function Project({ projects, p, status, rowIndex }) {
+  const {modifiedTimeSheetData, setModifiedTimeSheetData} = useStore();
   const [selectedKey, setSelectedKey] = useState(p);
   const [changeSelectedDescription, setChangeSelectedDescription] = useState('');
     
@@ -14,6 +14,10 @@ function Project({ projects, p, status }) {
   const handleDropdownChange = (event, option) => {
     setSelectedKey(option.key);
     setChangeSelectedDescription(option.description);
+
+    const updatedCell = [...modifiedTimeSheetData];
+    updatedCell[rowIndex].chargecodeId = option.key;
+    setModifiedTimeSheetData(updatedCell);
   };
 
 

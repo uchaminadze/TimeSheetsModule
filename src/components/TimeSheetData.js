@@ -25,11 +25,12 @@ export const TimeSheetData = ({ projects }) => {
     timeSheetData,
     uniqueId,
     modifiedTimeSheetData,
-    setModifiedTimeSheetData,
+    setModifiedTimeSheetData
   } = useStore();
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
   const [cellValue, setCellValue] = useState();
+  const [isFirstFocus, setIsFirstFocus] = useState(true);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -51,8 +52,9 @@ export const TimeSheetData = ({ projects }) => {
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
-
-      return { weekDayDates, hours, comments, timeSheetStatus };
+      let isTimeSheetEdited = false;
+      console.log(el);
+      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isTimeSheetEdited };
     });
 
 
@@ -122,13 +124,29 @@ export const TimeSheetData = ({ projects }) => {
   };
 
 
-  const onChangeHandler = (e, rowIndex, cellIndex) =>{
+
+  const onFocusHandler = (e, rowIndex, cellIndex) => {
+    if (isFirstFocus && cellEdit.cellIndex !== cellIndex && cellEdit.rowInex !== rowIndex) {
+      setCellValue(e.target.value)
+      setIsFirstFocus(false);
+      console.log(cellValue);
+    }
+  }
+
+
+  const onChangeHandler = (e, rowIndex, cellIndex, hour) =>{
     const value = Number(e.target.value);
     const newValue = value <= 0 ? 0 : value;
-
     const updatedCell = [...modifiedTimeSheetData];
     updatedCell[rowIndex].hours[cellIndex] = newValue;
+    
     setModifiedTimeSheetData(updatedCell);
+    // console.log(cellValue[cellValue.length - 1] - cellValue.length);
+    // if(newValue === cellValue){
+    //   updatedCell[rowIndex].isTimeSheetEdited = false
+    // }
+
+    // updatedCell[rowIndex].isTimeSheetEdited = true
   }
 
   return (
@@ -177,6 +195,7 @@ export const TimeSheetData = ({ projects }) => {
                         projects={projects}
                         p={[...projectId][rowIndex]}
                         status={sheet.timeSheetStatus}
+                        rowIndex={rowIndex}
                       />
                     </TableCell>
                     {sheet.weekDayDates.map((day, cellIndex) => {
@@ -201,8 +220,9 @@ export const TimeSheetData = ({ projects }) => {
                             <TextField
                               type="number"
                               defaultValue={sheet.hours[cellIndex]}
-                              onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
+                              onChange={(e) => onChangeHandler(e, rowIndex, cellIndex, sheet.hours[cellIndex])}
                               autoFocus
+                              onFocus={(e) => onFocusHandler(e, rowIndex, cellIndex)}
                             />
                           ) : (
                             sheet.hours[cellIndex] > 0 ? sheet.hours[cellIndex] : ""

@@ -24,7 +24,8 @@ function TimeSheetTable({ instance, accounts }) {
     setProjectId,
     projectDescription,
     setProjectDescription,
-    setUniqueId
+    setUniqueId,
+    modifiedTimeSheetData
   } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
@@ -283,22 +284,34 @@ function TimeSheetTable({ instance, accounts }) {
 
   function saveTimeSheets(){
     const accessToken = localStorage.getItem("accessToken");
-    fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets`, {
-        method: 'POST',
+    modifiedTimeSheetData.forEach((sheet) => {
+      if(sheet.timeSheetStatus === 824660000){
+        fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets(${sheet.timeSheetId})`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
-          cr303_tuesdayhours: 8.0000000000
+          // _cr303_chargecode_value: sheet.chargecodeId,
+          cr303_sundayhours: sheet.hours[0],
+          cr303_mondayhours: sheet.hours[1],
+          cr303_tuesdayhours: sheet.hours[2],
+          cr303_wednesdayhours: sheet.hours[3],
+          cr303_thursdayhours: sheet.hours[4],
+          cr303_fridayhours: sheet.hours[5],
+          cr303_saturdayhours: sheet.hours[6]
         })
       })
         .then((resp) => {
-          if(resp.status === 201){
-            console.log("Submitted successfully");
+          if(resp.status === 204){
+            console.log("Saved successfully");
           }
         })
         .catch((error) => console.log(error))
+      }
+    })
+    
   }
 
   return (
