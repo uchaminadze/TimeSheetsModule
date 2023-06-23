@@ -34,6 +34,7 @@ function TimeSheetTable({ instance, accounts }) {
   const [currentYear, setCurrentYear] = useState("");
   const [timeSheetIds, setTimeSheetIds] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (!apiCalled) {
@@ -48,7 +49,7 @@ function TimeSheetTable({ instance, accounts }) {
     if (weekId) {
       getTimeSheets();
     }
-  }, [weekId, isSubmitted]);
+  }, [weekId, isSubmitted, isSaved]);
   
   // useEffect(() => {
     //   if (projectId) {
@@ -285,27 +286,35 @@ function TimeSheetTable({ instance, accounts }) {
   function saveTimeSheets(){
     const accessToken = localStorage.getItem("accessToken");
     modifiedTimeSheetData.forEach((sheet) => {
-      if(sheet.timeSheetStatus === 824660000){
-        fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets(${sheet.timeSheetId})`, {
-        method: 'PATCH',
+      const payload = {
+        // "_cr303_week_value@odata.bind": "/cr303_weeks(8eb8b0a8-e6c1-ed11-83fe-000d3a381764)",
+        "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+        cr303_sundayhours: sheet.hours[0],
+        cr303_mondayhours: sheet.hours[1],
+        cr303_tuesdayhours: sheet.hours[2],
+        cr303_wednesdayhours: sheet.hours[3],
+        cr303_thursdayhours: sheet.hours[4],
+        cr303_fridayhours: sheet.hours[5],
+        cr303_saturdayhours: sheet.hours[6]
+      };
+  
+      if (sheet.chargecodeId !== null) {
+        payload["cr303_ChargeCode@odata.bind"] = `/cr303_chargecodes(${sheet.chargecodeId})`;
+      }
+
+      if(sheet.timeSheetStatus === 824660000 && sheet.isEdited){
+        fetch(`https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${!sheet.isNewRow ? `(${sheet.timeSheetId})` : ""}`, {
+        method: sheet.isNewRow ? 'POST' : 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({
-          // _cr303_chargecode_value: sheet.chargecodeId,
-          cr303_sundayhours: sheet.hours[0],
-          cr303_mondayhours: sheet.hours[1],
-          cr303_tuesdayhours: sheet.hours[2],
-          cr303_wednesdayhours: sheet.hours[3],
-          cr303_thursdayhours: sheet.hours[4],
-          cr303_fridayhours: sheet.hours[5],
-          cr303_saturdayhours: sheet.hours[6]
-        })
+        body: JSON.stringify(payload)
       })
         .then((resp) => {
           if(resp.status === 204){
             console.log("Saved successfully");
+            setIsSaved(true);
           }
         })
         .catch((error) => console.log(error))

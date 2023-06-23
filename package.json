@@ -9,6 +9,7 @@
     "@emotion/styled": "^11.11.0",
     "@fluentui/react": "^8.110.2",
     "@mui/material": "^5.13.5",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zukeeper": "^1.0.2",

@@ -18,6 +18,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { Stack, TableFooter, TextField, Typography } from "@mui/material";
 import { DefaultButton } from "@fluentui/react";
+import _ from 'lodash';
 
 export const TimeSheetData = ({ projects }) => {
   const {
@@ -25,12 +26,12 @@ export const TimeSheetData = ({ projects }) => {
     timeSheetData,
     uniqueId,
     modifiedTimeSheetData,
-    setModifiedTimeSheetData
+    setModifiedTimeSheetData,
+    staticTimeSheetData,
+    setStaticTimeSheetData
   } = useStore();
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
-  const [cellValue, setCellValue] = useState();
-  const [isFirstFocus, setIsFirstFocus] = useState(true);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -40,6 +41,20 @@ export const TimeSheetData = ({ projects }) => {
     };
 
     document.addEventListener("click", handleClickOutside);
+
+
+    const mappedTimeSheetData = timeSheetData.map((el) => {
+      const weekDayDates = getWeekDayDates(el);
+      const hours = getWeekDayHours(el);
+      const comments = getWeekDayComments(el);
+      const timeSheetStatus = getTimeSheetStatus(el);
+      let isEdited = false;
+      let isNewRow = false;
+      console.log(el);
+      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isEdited, isNewRow };
+    });
+  
+    setStaticTimeSheetData(mappedTimeSheetData);
 
     return () => {
       document.removeEventListener("click", handleClickOutside);
@@ -52,9 +67,10 @@ export const TimeSheetData = ({ projects }) => {
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
-      let isTimeSheetEdited = false;
+      let isEdited = false;
+      let isNewRow = false;
       console.log(el);
-      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isTimeSheetEdited };
+      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isEdited, isNewRow };
     });
 
 
@@ -66,14 +82,9 @@ export const TimeSheetData = ({ projects }) => {
 
     console.log(result);
     
-    setModifiedTimeSheetData(mappedTimeSheetData);
+    
+    setModifiedTimeSheetData(mappedTimeSheetData)
   }, [timeSheetData]);
-
-
-
-  useEffect(() => {
-    console.log(modifiedTimeSheetData);
-  }, [modifiedTimeSheetData])
 
 
   const totalSundayHours = timeSheetData.reduce(
@@ -124,29 +135,22 @@ export const TimeSheetData = ({ projects }) => {
   };
 
 
-
-  const onFocusHandler = (e, rowIndex, cellIndex) => {
-    if (isFirstFocus && cellEdit.cellIndex !== cellIndex && cellEdit.rowInex !== rowIndex) {
-      setCellValue(e.target.value)
-      setIsFirstFocus(false);
-      console.log(cellValue);
-    }
-  }
-
-
-  const onChangeHandler = (e, rowIndex, cellIndex, hour) =>{
+  const onChangeHandler = (e, rowIndex, cellIndex) =>{
     const value = Number(e.target.value);
     const newValue = value <= 0 ? 0 : value;
     const updatedCell = [...modifiedTimeSheetData];
-    updatedCell[rowIndex].hours[cellIndex] = newValue;
-    
-    setModifiedTimeSheetData(updatedCell);
-    // console.log(cellValue[cellValue.length - 1] - cellValue.length);
-    // if(newValue === cellValue){
-    //   updatedCell[rowIndex].isTimeSheetEdited = false
-    // }
+    updatedCell[rowIndex].hours[cellIndex] = newValue ? newValue : null;
 
-    // updatedCell[rowIndex].isTimeSheetEdited = true
+    const isSheetEdited = !_.isEqual(
+      _.omit(updatedCell[rowIndex], "isEdited"),
+      _.omit(staticTimeSheetData[rowIndex], "isEdited")
+    )
+    updatedCell[rowIndex].isEdited = isSheetEdited;
+    setModifiedTimeSheetData(updatedCell)
+
+    // const updatedFields = _.omitBy(updatedCell[rowIndex], (value, key) => {
+    //   return _.isEqual(value, staticTimeSheetData[rowIndex][key]);
+    // });
   }
 
   return (
@@ -220,9 +224,8 @@ export const TimeSheetData = ({ projects }) => {
                             <TextField
                               type="number"
                               defaultValue={sheet.hours[cellIndex]}
-                              onChange={(e) => onChangeHandler(e, rowIndex, cellIndex, sheet.hours[cellIndex])}
+                              onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
                               autoFocus
-                              onFocus={(e) => onFocusHandler(e, rowIndex, cellIndex)}
                             />
                           ) : (
                             sheet.hours[cellIndex] > 0 ? sheet.hours[cellIndex] : ""

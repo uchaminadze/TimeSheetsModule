@@ -3,9 +3,10 @@ import { callDataverseWebAPI } from "../api/dataverse";
 import { Dropdown, initializeIcons } from "@fluentui/react";
 import { Stack, Typography } from "@mui/material";
 import useStore from "../store/useStore";
+import _ from "lodash";
 
 function Project({ projects, p, status, rowIndex }) {
-  const {modifiedTimeSheetData, setModifiedTimeSheetData} = useStore();
+  const {modifiedTimeSheetData, setModifiedTimeSheetData, staticTimeSheetData} = useStore();
   const [selectedKey, setSelectedKey] = useState(p);
   const [changeSelectedDescription, setChangeSelectedDescription] = useState('');
     
@@ -17,7 +18,13 @@ function Project({ projects, p, status, rowIndex }) {
 
     const updatedCell = [...modifiedTimeSheetData];
     updatedCell[rowIndex].chargecodeId = option.key;
-    setModifiedTimeSheetData(updatedCell);
+
+    const isSheetEdited = !_.isEqual(
+      _.omit(updatedCell[rowIndex], "isEdited"),
+      _.omit(staticTimeSheetData[rowIndex], "isEdited")
+    )
+    updatedCell[rowIndex].isEdited = isSheetEdited;
+    setModifiedTimeSheetData(updatedCell)
   };
 
 
