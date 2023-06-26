@@ -33,6 +33,7 @@ export const TimeSheetData = ({ projects }) => {
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
 
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tableRef.current && !tableRef.current.contains(event.target)) {
@@ -147,11 +148,11 @@ export const TimeSheetData = ({ projects }) => {
     )
     updatedCell[rowIndex].isEdited = isSheetEdited;
     setModifiedTimeSheetData(updatedCell)
-
-    // const updatedFields = _.omitBy(updatedCell[rowIndex], (value, key) => {
-    //   return _.isEqual(value, staticTimeSheetData[rowIndex][key]);
-    // });
   }
+
+
+
+
 
   return (
     <div>
@@ -203,7 +204,6 @@ export const TimeSheetData = ({ projects }) => {
                       />
                     </TableCell>
                     {sheet.weekDayDates.map((day, cellIndex) => {
-                      
                       return (
                         <TableCell
                           align="center"
@@ -275,6 +275,7 @@ export const TimeSheetData = ({ projects }) => {
               <TableCell sx={{ fontSize: 20 }} align="center">
                 {total > 0 ? total : ""}
               </TableCell>
+              <TableCell></TableCell>
             </TableRow>
           </TableFooter>
         </Table>
