@@ -20,9 +20,10 @@ import { Stack, TableFooter, TextField, Typography } from "@mui/material";
 import { DefaultButton } from "@fluentui/react";
 import _ from 'lodash';
 
-export const TimeSheetData = ({ projects }) => {
+export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
   const {
     projectId,
+    setProjectId,
     timeSheetData,
     uniqueId,
     modifiedTimeSheetData,
@@ -60,9 +61,24 @@ export const TimeSheetData = ({ projects }) => {
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [timeSheetData]);
+
+
 
   useEffect(() => {
+    function createDateStringArray(weekStart, weekEnd) {
+      const dateArray = [];
+      const currentDate = new Date(weekStart); // Convert start date to a Date object
+      
+      while (currentDate <= new Date(weekEnd)) { // Continue until currentDate reaches or exceeds the end date
+        dateArray.push(currentDate.toISOString().split("T")[0] + "T05:00:00Z"); // Add current date as a string in the desired format
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1); // Move to the next day
+      }
+      
+      return dateArray;
+    }
+
+
     const mappedTimeSheetData = timeSheetData.map((el) => {
       const weekDayDates = getWeekDayDates(el);
       const hours = getWeekDayHours(el);
@@ -71,20 +87,40 @@ export const TimeSheetData = ({ projects }) => {
       let isEdited = false;
       let isNewRow = false;
       console.log(el);
-      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isEdited, isNewRow };
+      return { 
+        weekDayDates, 
+        hours, 
+        comments, 
+        timeSheetStatus, 
+        chargecodeId: el._cr303_chargecode_value, 
+        timeSheetId: el.cr303_timesheetid, 
+        isEdited, 
+        isNewRow 
+      }
     });
 
 
-    const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
-      return array2.hours.map(function(value, index) {
-        return value + (array1[index] || 0);
-      }, 0);
-    }, []);
+    const draftTimeSheetData = {
+      weekDayDates: createDateStringArray(weekStart, weekEnd),
+      hours: [null, null, null, null, null, null, null],
+      comments: [null, null, null, null, null, null, null], 
+      timeSheetStatus: 824660000, 
+      chargecodeId: null, 
+      isEdited: false, 
+      isNewRow: true
+    }
 
-    console.log(result);
+
+    // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
+    //   return array2.hours.map(function(value, index) {
+    //     return value + (array1[index] || 0);
+    //   }, 0);
+    // }, []);
+
+    // console.log(result);
     
-    
-    setModifiedTimeSheetData(mappedTimeSheetData)
+    setProjectId(timeSheetData.length > 0 ? projectId : [...projectId, null])
+    setModifiedTimeSheetData(timeSheetData.length > 0 ? mappedTimeSheetData : [draftTimeSheetData])
   }, [timeSheetData]);
 
 
