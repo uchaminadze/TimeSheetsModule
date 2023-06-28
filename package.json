@@ -8,6 +8,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fluentui/react": "^8.110.2",
+    "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.5",
     "lodash": "^4.17.21",
     "react": "^18.2.0",

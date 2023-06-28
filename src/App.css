@@ -12,6 +12,14 @@ body{
 }
 
 
+
+.main-content{
+    max-width: 1480px;
+    margin: 0 auto;
+}
+
+
+
 .MuiTableCell-root{
     border: 1px solid #DBDFE2;
 }
@@ -27,6 +35,22 @@ body{
     border: none !important;
     outline: none !important;
 }
+
+
+
+.root-108:hover,
+.root-100:hover,
+.root-109:hover{
+    background: none;
+    color: #1A6BA9;
+}
+
+
+.root-110:hover{
+    background: #1A6BA9;
+    color: white;
+}
+
 
 
 .dropdown-119{

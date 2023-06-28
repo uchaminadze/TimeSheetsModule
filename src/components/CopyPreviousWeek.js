@@ -1,6 +1,7 @@
 import { DefaultButton, Icon } from "@fluentui/react";
 import React from "react";
 import useStore from "../store/useStore";
+import { ContentCopyRounded } from "@mui/icons-material";
 
 function CopyPreviousWeek({ copyPreviousWeek }) {
   const { weekStartDate } = useStore();
@@ -23,10 +24,11 @@ function CopyPreviousWeek({ copyPreviousWeek }) {
   };
   return (
     <DefaultButton
-      styles={{ root: { marginLeft: 10, border: "none" } }}
+      styles={{ root: { marginLeft: 10, border: "none", fontSize: "16px", color: "#1A6BA9" }}}
       onClick={handlePreviousWeekCopy}
     >
-      <Icon iconName="Copy" styles={{root: {marginRight: 10}}}/>
+      {/* <Icon iconName="Copy" styles={{root: {marginRight: 10}}}/> */}
+      <ContentCopyRounded sx={{marginRight: 1.6}} />
       Copy previous week
     </DefaultButton>
   );

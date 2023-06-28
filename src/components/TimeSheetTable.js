@@ -396,61 +396,60 @@ function TimeSheetTable({ instance, accounts }) {
     const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue} and _cr303_week_value eq ${prevWeekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
       .then((data) => {
-        const copiedTimeSheetData = [];
-        const copiedTimeSheetChargecodeId = [];
-        data.value?.forEach((sheet) => {
-          const copiedTimeSheet = {
-            weekDayDates: [
-              sheet.cr303_sundaydate,
-              sheet.cr303_mondaydate,
-              sheet.cr303_tuesdaydate,
-              sheet.cr303_wednesdaydate,
-              sheet.cr303_thursdaydate,
-              sheet.cr303_fridaydate,
-              sheet.cr303_saturdaydate2,
-            ],
-            hours: [
-              sheet.cr303_sundayhours,
-              sheet.cr303_mondayhours,
-              sheet.cr303_tuesdayhours,
-              sheet.cr303_wednesdayhours,
-              sheet.cr303_thursdayhours,
-              sheet.cr303_fridayhours,
-              sheet.cr303_saturdayhours,
-            ],
-            comments: [
-              sheet.cr303_sundaycomment,
-              sheet.cr303_mondaycomment,
-              sheet.cr303_tuesdaycomment,
-              sheet.cr303_wednesdaycomment,
-              sheet.cr303_thursdaycomment,
-              sheet.cr303_fridaycomment,
-              sheet.cr303_saturdaycomment,
-            ],
-            timeSheetStatus: sheet.cr303_timesheetstatus,
-            chargecodeId: sheet._cr303_chargecode_value,
-            isEdited: false,
-            isNewRow: true,
-          };
-          if (sheet.cr303_timesheetstatus === 824660000) {
+        if(data.value.length > 0 && timeSheetData.length === 0){
+          const copiedTimeSheetData = [];
+          const copiedTimeSheetChargecodeId = [];
+          data.value?.forEach((sheet) => {
+            const copiedTimeSheet = {
+              weekDayDates: [
+                sheet.cr303_sundaydate,
+                sheet.cr303_mondaydate,
+                sheet.cr303_tuesdaydate,
+                sheet.cr303_wednesdaydate,
+                sheet.cr303_thursdaydate,
+                sheet.cr303_fridaydate,
+                sheet.cr303_saturdaydate2,
+              ],
+              hours: [
+                sheet.cr303_sundayhours,
+                sheet.cr303_mondayhours,
+                sheet.cr303_tuesdayhours,
+                sheet.cr303_wednesdayhours,
+                sheet.cr303_thursdayhours,
+                sheet.cr303_fridayhours,
+                sheet.cr303_saturdayhours,
+              ],
+              comments: [
+                sheet.cr303_sundaycomment,
+                sheet.cr303_mondaycomment,
+                sheet.cr303_tuesdaycomment,
+                sheet.cr303_wednesdaycomment,
+                sheet.cr303_thursdaycomment,
+                sheet.cr303_fridaycomment,
+                sheet.cr303_saturdaycomment,
+              ],
+              timeSheetStatus: 824660000,
+              chargecodeId: sheet._cr303_chargecode_value,
+              isEdited: false,
+              isNewRow: true,
+            };
             copiedTimeSheetData.push(copiedTimeSheet);
             copiedTimeSheetChargecodeId.push(sheet._cr303_chargecode_value);
-          }
-        });
-        setProjectId([...projectId, ...copiedTimeSheetChargecodeId]);
-        setModifiedTimeSheetData([
-          ...modifiedTimeSheetData,
-          ...copiedTimeSheetData,
-        ]);
+          });
+          setProjectId([...projectId, ...copiedTimeSheetChargecodeId]);
+          setModifiedTimeSheetData([
+            ...modifiedTimeSheetData,
+            ...copiedTimeSheetData,
+          ]);
+
+        }
+
       })
       .catch((err) => console.log(err));
   }
 
   return (
-    <>
-      <h4>Welcome {accounts[0].name}</h4>
-      <br />
-      <br />
+    <div className="main-content">
       <Stack horizontal>
         {timeSheetData && (
           <WeeksPagination
@@ -467,15 +466,16 @@ function TimeSheetTable({ instance, accounts }) {
       </Stack>
       <br />
       <br />
-      {timeSheetData && 
-        <TimeSheetData 
+      {timeSheetData && (
+        <TimeSheetData
           projects={projects}
           weekStart={weekStart}
-          weekEnd={weekEnd} 
-        />}
+          weekEnd={weekEnd}
+        />
+      )}
       <br />
       <br />
-      <Stack horizontal horizontalAlign="space-between">
+      <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
         <Stack.Item>
           <AddTimeSheetRow />
           <CopyPreviousWeek copyPreviousWeek={copyPreviousWeek} />
@@ -485,7 +485,7 @@ function TimeSheetTable({ instance, accounts }) {
           <SubmitTimeSheets submitTimeSheets={submitTimeSheets} />
         </Stack.Item>
       </Stack>
-    </>
+    </div>
   );
 }
 

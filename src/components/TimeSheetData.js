@@ -37,7 +37,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (tableRef.current && !tableRef.current.contains(event.target)) {
+      if (tableRef.current && !tableRef.current.contains(event.target) && !tableRef.current.isEqualNode(event.target)) {
         setCellEdit(null);
       }
     };
@@ -192,14 +192,14 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
   return (
     <div>
-      <TableContainer sx={{ maxWidth: 1480 }}>
+      <TableContainer>
         <Table aria-label="time sheet table">
-          <TableHead>
+          <TableHead sx={{background: "#77AFF2", borderRadius: "20px"}}>
             <TableRow>
               <TableCell>
                 <Stack direction="row" spacing={23.1}>
-                  <Typography sx={{ fontSize: 20 }}>Project</Typography>
-                  <Typography sx={{ fontSize: 20 }}>Description</Typography>
+                  <Typography sx={{ fontSize: 20, color: "white" }}>Project</Typography>
+                  <Typography sx={{ fontSize: 20, color: "white" }}>Description</Typography>
                 </Stack>
               </TableCell>
               {modifiedTimeSheetData &&
@@ -207,17 +207,17 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                   const slicedDay = sheet.slice(8, 10);
                   return (
                     <TableCell key={index + 1} align="center">
-                      <Typography sx={{ fontSize: 14 }}>
+                      <Typography sx={{ fontSize: 14, color: "white", opacity: 0.6 }}>
                         {weekDayNames[index]}
                       </Typography>
-                      <Typography sx={{ fontSize: 32 }}>{slicedDay}</Typography>
+                      <Typography sx={{ fontSize: 32, color: "white" }}>{slicedDay}</Typography>
                     </TableCell>
                   );
                 })}
-              <TableCell sx={{ fontSize: 20 }} align="center">
+              <TableCell sx={{ fontSize: 20, color: "white" }} align="center">
                 Total
               </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
+              <TableCell sx={{ fontSize: 20, color: "white" }} align="center">
                 Status
               </TableCell>
             </TableRow>
@@ -247,15 +247,32 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                             fontSize: 20,
                             position: "relative",
                             cursor:
-                              sheet.timeSheetStatus === 824660000
+                              sheet.timeSheetStatus === 824660000 &&
+                              sheet.chargecodeId !== null
                                 ? "pointer"
                                 : "auto",
+                            pointerEvents: 
+                              sheet.timeSheetStatus === 824660000 &&
+                              sheet.chargecodeId === null
+                                ? "none"
+                                : "auto",
+                            background:
+                              sheet.timeSheetStatus !== 824660000 ||
+                              sheet.chargecodeId === null
+                                ? "#f5f5f5" 
+                                : "white",
+                            color:
+                              sheet.timeSheetStatus !== 824660000
+                                ? "#999999" 
+                                : "black",
+                            
                           }}
                           key={cellIndex + 1}
                           onClick={() => onClickHandler(rowIndex, cellIndex)}
                         >
                           {cellEdit?.rowIndex === rowIndex &&
                           cellEdit?.cellIndex === cellIndex &&
+                          sheet.chargecodeId !== null &&
                           sheet.timeSheetStatus === 824660000 ? (
                             <TextField
                               type="number"

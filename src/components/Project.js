@@ -6,25 +6,34 @@ import useStore from "../store/useStore";
 import _ from "lodash";
 
 function Project({ projects, p, status, rowIndex }) {
-  const {modifiedTimeSheetData, setModifiedTimeSheetData, staticTimeSheetData} = useStore();
+  const {modifiedTimeSheetData, setModifiedTimeSheetData, staticTimeSheetData, projectId, setProjectId} = useStore();
   const [selectedKey, setSelectedKey] = useState(p);
   const [changeSelectedDescription, setChangeSelectedDescription] = useState('');
     
   initializeIcons()
 
   const handleDropdownChange = (event, option) => {
-    setSelectedKey(option.key);
-    setChangeSelectedDescription(option.description);
+    
 
-    const updatedCell = [...modifiedTimeSheetData];
-    updatedCell[rowIndex].chargecodeId = option.key;
+    if(!projectId.includes(option.key)){
+      setSelectedKey(option.key);
+      setChangeSelectedDescription(option.description);
 
-    const isSheetEdited = !_.isEqual(
-      _.omit(updatedCell[rowIndex], "isEdited"),
-      _.omit(staticTimeSheetData[rowIndex], "isEdited")
-    )
-    updatedCell[rowIndex].isEdited = isSheetEdited;
-    setModifiedTimeSheetData(updatedCell)
+      const updatedCell = [...modifiedTimeSheetData];
+      updatedCell[rowIndex].chargecodeId = option.key;
+
+      const isSheetEdited = !_.isEqual(
+        _.omit(updatedCell[rowIndex], "isEdited"),
+        _.omit(staticTimeSheetData[rowIndex], "isEdited")
+      )
+      updatedCell[rowIndex].isEdited = isSheetEdited;
+      projectId[rowIndex] = option.key;
+      setProjectId(projectId)
+      setModifiedTimeSheetData(updatedCell)
+    }
+
+    
+    
   };
 
 
