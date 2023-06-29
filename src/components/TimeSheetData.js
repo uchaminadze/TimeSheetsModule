@@ -37,7 +37,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (tableRef.current && !tableRef.current.contains(event.target) && !tableRef.current.isEqualNode(event.target)) {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
         setCellEdit(null);
       }
     };
@@ -50,10 +50,10 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
+      let hasEntries = false;
       let isEdited = false;
       let isNewRow = false;
-      console.log(el);
-      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, isEdited, isNewRow };
+      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, hasEntries, isEdited, isNewRow };
     });
   
     setStaticTimeSheetData(mappedTimeSheetData);
@@ -84,6 +84,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
+      let hasEntries = hours.some((h) => h !== null);
       let isEdited = false;
       let isNewRow = false;
       console.log(el);
@@ -93,9 +94,10 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
         comments, 
         timeSheetStatus, 
         chargecodeId: el._cr303_chargecode_value, 
-        timeSheetId: el.cr303_timesheetid, 
+        timeSheetId: el.cr303_timesheetid,
+        hasEntries, 
         isEdited, 
-        isNewRow 
+        isNewRow
       }
     });
 
@@ -104,8 +106,9 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       weekDayDates: createDateStringArray(weekStart, weekEnd),
       hours: [null, null, null, null, null, null, null],
       comments: [null, null, null, null, null, null, null], 
-      timeSheetStatus: 824660000, 
-      chargecodeId: null, 
+      timeSheetStatus: null, 
+      chargecodeId: null,
+      hasEntries: false,
       isEdited: false, 
       isNewRow: true
     }
@@ -122,6 +125,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
     setProjectId(timeSheetData.length > 0 ? projectId : [...projectId, null])
     setModifiedTimeSheetData(timeSheetData.length > 0 ? mappedTimeSheetData : [draftTimeSheetData])
   }, [timeSheetData]);
+  
 
 
   const totalSundayHours = timeSheetData.reduce(
@@ -182,6 +186,8 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       _.omit(updatedCell[rowIndex], "isEdited"),
       _.omit(staticTimeSheetData[rowIndex], "isEdited")
     )
+
+    updatedCell[rowIndex].hasEntries = updatedCell[rowIndex].hours.some((h) => h !== null);
     updatedCell[rowIndex].isEdited = isSheetEdited;
     setModifiedTimeSheetData(updatedCell)
   }
@@ -194,9 +200,9 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
     <div>
       <TableContainer>
         <Table aria-label="time sheet table">
-          <TableHead sx={{background: "#77AFF2", borderRadius: "20px"}}>
+          <TableHead sx={{background: "#77AFF2"}}>
             <TableRow>
-              <TableCell>
+              <TableCell sx={{borderLeft: "none !important", borderBottom: "none !important", borderTopLeftRadius: "4px !important", borderBottomLeftRadius: "4px !important"}}>
                 <Stack direction="row" spacing={23.1}>
                   <Typography sx={{ fontSize: 20, color: "white" }}>Project</Typography>
                   <Typography sx={{ fontSize: 20, color: "white" }}>Description</Typography>
@@ -206,7 +212,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                 modifiedTimeSheetData[0]?.weekDayDates.map((sheet, index) => {
                   const slicedDay = sheet.slice(8, 10);
                   return (
-                    <TableCell key={index + 1} align="center">
+                    <TableCell key={index + 1} align="center" sx={{borderBottom: "none !important"}}>
                       <Typography sx={{ fontSize: 14, color: "white", opacity: 0.6 }}>
                         {weekDayNames[index]}
                       </Typography>
@@ -214,10 +220,10 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                     </TableCell>
                   );
                 })}
-              <TableCell sx={{ fontSize: 20, color: "white" }} align="center">
+              <TableCell sx={{ fontSize: 20, color: "white", borderBottom: "none !important" }} align="center">
                 Total
               </TableCell>
-              <TableCell sx={{ fontSize: 20, color: "white" }} align="center">
+              <TableCell sx={{ fontSize: 20, color: "white", borderBottom: "none !important", borderRight: "none !important", borderTopRightRadius: "4px !important", borderBottomRightRadius: "4px !important" }} align="center">
                 Status
               </TableCell>
             </TableRow>
@@ -228,9 +234,11 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                 const sum = sheet.hours.reduce((acc, curr) => {
                   return acc + curr;
                 }, 0);
+
+                console.log(sum);
                 return (
                   <TableRow key={rowIndex + 1}>
-                    <TableCell>
+                    <TableCell sx={{borderLeft: "none !important" }}>
                       <Project
                         key={uniqueId + 1}
                         projects={projects}
@@ -247,33 +255,23 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                             fontSize: 20,
                             position: "relative",
                             cursor:
-                              sheet.timeSheetStatus === 824660000 &&
+                              (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) &&
                               sheet.chargecodeId !== null
                                 ? "pointer"
                                 : "auto",
                             pointerEvents: 
-                              sheet.timeSheetStatus === 824660000 &&
+                              (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) &&
                               sheet.chargecodeId === null
                                 ? "none"
-                                : "auto",
-                            background:
-                              sheet.timeSheetStatus !== 824660000 ||
-                              sheet.chargecodeId === null
-                                ? "#f5f5f5" 
-                                : "white",
-                            color:
-                              sheet.timeSheetStatus !== 824660000
-                                ? "#999999" 
-                                : "black",
-                            
+                                : "auto"
                           }}
                           key={cellIndex + 1}
                           onClick={() => onClickHandler(rowIndex, cellIndex)}
                         >
-                          {cellEdit?.rowIndex === rowIndex &&
+                          {(cellEdit?.rowIndex === rowIndex &&
                           cellEdit?.cellIndex === cellIndex &&
-                          sheet.chargecodeId !== null &&
-                          sheet.timeSheetStatus === 824660000 ? (
+                          sheet.chargecodeId !== null) &&
+                          (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) ? (
                             <TextField
                               type="number"
                               defaultValue={sheet.hours[cellIndex]}
@@ -289,8 +287,23 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                     <TableCell sx={{ fontSize: 20 }} align="center">
                       {sum > 0 ? sum : ""}
                     </TableCell>
-                    <TableCell sx={{ fontSize: 20 }} align="center">
-                      {statusLabels[sheet.timeSheetStatus]}
+                    <TableCell sx={{  
+                      borderRight: "none !important", 
+                      borderTop: "none !important",
+                      textAlign: "center"
+                    }} align="center">
+                      <Typography sx={{
+                        fontSize: statusLabels[sheet.timeSheetStatus] === "Draft" ? "16px" : "14px",
+                        borderRadius: "4px",
+                        padding: "9px 12px",
+                        background: 
+                          statusLabels[sheet.timeSheetStatus] === "Draft" ? "#DBDFE2" :
+                          statusLabels[sheet.timeSheetStatus] === "Submitted" ? "#77AFF2" :
+                          statusLabels[sheet.timeSheetStatus] === "Approved" ? "#169256" : "",
+                        color: statusLabels[sheet.timeSheetStatus] === "Draft" ? "#373A3C" : "#FFFFFF"
+                      }}>
+                        {statusLabels[sheet.timeSheetStatus]}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 );
@@ -300,7 +313,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
             <TableRow>
               <TableCell
                 align="right"
-                sx={{ fontWeight: 600, color: "#373A3C", fontSize: 20 }}
+                sx={{ fontWeight: 600, color: "#373A3C", fontSize: 20, borderLeft: "none !important" }}
               >
                 Total work time
               </TableCell>
@@ -328,7 +341,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
               <TableCell sx={{ fontSize: 20 }} align="center">
                 {total > 0 ? total : ""}
               </TableCell>
-              <TableCell></TableCell>
+              <TableCell sx={{borderRight: "none !important" }}></TableCell>
             </TableRow>
           </TableFooter>
         </Table>

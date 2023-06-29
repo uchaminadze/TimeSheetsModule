@@ -206,15 +206,15 @@ function TimeSheetTable({ instance, accounts }) {
         setTimeSheetData(data.value);
         console.log(timeSheetData);
 
-        const timesheetIDs = [];
+        // const timesheetIDs = [];
 
-        data.value?.forEach((sheet) => {
-          if (sheet.cr303_timesheetstatus === 824660000) {
-            timesheetIDs.push(sheet.cr303_timesheetid);
-          }
-        });
+        // data.value?.forEach((sheet) => {
+        //   if (sheet.cr303_timesheetstatus === 824660000) {
+        //     timesheetIDs.push(sheet.cr303_timesheetid);
+        //   }
+        // });
 
-        setTimeSheetIds(timesheetIDs);
+        // setTimeSheetIds(timesheetIDs);
 
         const projectIdArray = data.value.map((c) => {
           return c._cr303_chargecode_value;
@@ -304,37 +304,14 @@ function TimeSheetTable({ instance, accounts }) {
     setWeekStartDate(formattedPreviousWeekStart);
   };
 
-  function submitTimeSheets() {
-    const accessToken = localStorage.getItem("accessToken");
-    timeSheetIds?.forEach((id) => {
-      fetch(
-        `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets(${id})`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            cr303_timesheetstatus: 824660001,
-          }),
-        }
-      )
-        .then((resp) => {
-          if (resp.status === 204) {
-            console.log("Submitted successfully");
-            setIsSubmitted(true);
-          }
-        })
-        .catch((error) => console.log(error));
-    });
-  }
 
-  function saveTimeSheets() {
+  function submitTimeSheets() {
     const accessToken = localStorage.getItem("accessToken");
     modifiedTimeSheetData?.forEach((sheet) => {
       const payload = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        cr303_timesheetstatus: 824660001,
         cr303_sundayhours: sheet.hours[0],
         cr303_mondayhours: sheet.hours[1],
         cr303_tuesdayhours: sheet.hours[2],
@@ -344,15 +321,46 @@ function TimeSheetTable({ instance, accounts }) {
         cr303_saturdayhours: sheet.hours[6],
       };
 
-      if (sheet.chargecodeId !== null) {
-        payload[
-          "cr303_ChargeCode@odata.bind"
-        ] = `/cr303_chargecodes(${sheet.chargecodeId})`;
+      if(sheet.hasEntries && (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)){
+        fetch(
+          `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""}`,
+          {
+            method: sheet.timeSheetId ? "PATCH" : "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(sheet.timeSheetId ? {cr303_timesheetstatus: 824660001} : payload),
+          }
+        )
+          .then((resp) => {
+            if (resp.status === 204) {
+              console.log("Submitted successfully");
+              setIsSubmitted(true);
+            }
+          })
+          .catch((error) => console.log(error));
       }
+    });
+  }
+
+  function saveTimeSheets() {
+    const accessToken = localStorage.getItem("accessToken");
+    modifiedTimeSheetData?.forEach((sheet) => {
+      const payload = {
+        "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        cr303_sundayhours: sheet.hours[0],
+        cr303_mondayhours: sheet.hours[1],
+        cr303_tuesdayhours: sheet.hours[2],
+        cr303_wednesdayhours: sheet.hours[3],
+        cr303_thursdayhours: sheet.hours[4],
+        cr303_fridayhours: sheet.hours[5],
+        cr303_saturdayhours: sheet.hours[6],
+      };
 
       if (
-        (sheet.timeSheetStatus === 824660000 && sheet.isEdited) ||
-        sheet.isNewRow
+        (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) && sheet.isEdited && sheet.hasEntries
       ) {
         fetch(
           `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${
@@ -461,7 +469,7 @@ function TimeSheetTable({ instance, accounts }) {
             weekEnd={weekEnd}
           />
         )}
-
+        
         {timeSheetData && <WeeksDropdown weeks={weeks} />}
       </Stack>
       <br />

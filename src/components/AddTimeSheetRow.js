@@ -23,7 +23,7 @@ function AddTimeSheetRow() {
       ],
       hours: [null, null, null, null, null, null, null],
       comments: [null, null, null, null, null, null, null],
-      timeSheetStatus: 824660000,
+      timeSheetStatus: null,
       chargecodeId: null,
       isEdited: false,
       isNewRow: true,

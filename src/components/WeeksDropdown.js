@@ -21,12 +21,10 @@ function WeeksDropdown({ weeks }) {
 
   return (
     <Dropdown
-    //   placeholder="Weeks"
       options={weeks}
       responsiveMode={2}
       onChange={onChangeHandler}
       selectedKey={weekId}
-    //   styles={dropdownStyles}
     />
   );
 }

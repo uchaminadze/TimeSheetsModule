@@ -37,10 +37,10 @@ function Project({ projects, p, status, rowIndex }) {
   };
 
 
-useEffect(() => {
-  const selectedOption = projects.find(option => option.key === p);
-  setChangeSelectedDescription(selectedOption?.description);
-}, [])
+  useEffect(() => {
+    const selectedOption = projects.find(option => option.key === p);
+    setChangeSelectedDescription(selectedOption?.description);
+  }, [])
 
 
 
@@ -57,10 +57,16 @@ useEffect(() => {
           onChange={handleDropdownChange}
           styles={dropdownStyles}
           selectedKey={selectedKey}
-          disabled={status !== 824660000}
+          disabled={status !== null && status !== 824660000}
         />
 
-        <Typography sx={{fontSize: 14}}>{changeSelectedDescription ? changeSelectedDescription : "Description"}</Typography>
+        <Typography sx={{
+            fontSize: 14,
+            color: changeSelectedDescription ? "#373A3C" : "#87898A"
+          }}
+        >
+          {changeSelectedDescription ? changeSelectedDescription : "Description"}
+        </Typography>
     </Stack>
   );
 }

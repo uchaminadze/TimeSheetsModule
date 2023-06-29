@@ -22,18 +22,31 @@ body{
 
 .MuiTableCell-root{
     border: 1px solid #DBDFE2;
+    border-top: none !important;
 }
+
 
 
 .title-99,
 .title-139,
+.title-141,
+.title-162,
 .title-142,
 .title-143,
+.title-116,
 .title-120,
+.dropdown-115,
 .dropdown-118:focus::after,
 .dropdown-97:focus::after{
     border: none !important;
     outline: none !important;
+}
+
+
+
+.title-142{
+    color: initial;
+    background: none;
 }
 
 
