@@ -81,6 +81,16 @@ export const getTimeSheetStatus = (timeSheetData) =>{
 }
 
 
+export const getTimeSheetTotalHours = (timeSheetData) =>{
+    const {
+        cr303_totalhours
+    } = timeSheetData || {};
+
+
+    return cr303_totalhours
+}
+
+
 
 
 export const statusLabels = {

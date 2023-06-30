@@ -19,6 +19,7 @@ import TableRow from "@mui/material/TableRow";
 import { Stack, TableFooter, TextField, Typography } from "@mui/material";
 import { DefaultButton } from "@fluentui/react";
 import _ from 'lodash';
+import ProjectChart from "./ProjectChart";
 
 export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
   const {
@@ -33,6 +34,8 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
   } = useStore();
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
+  const [projectTotalHours, setProjectTotalHours] = useState();
+  const [randomColor, setRandomColor] = useState();
 
 
   useEffect(() => {
@@ -44,17 +47,18 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
     document.addEventListener("click", handleClickOutside);
 
-
     const mappedTimeSheetData = timeSheetData.map((el) => {
       const weekDayDates = getWeekDayDates(el);
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
+      const totalHours = el.mw_totalhours;
       let hasEntries = false;
       let isEdited = false;
       let isNewRow = false;
-      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, hasEntries, isEdited, isNewRow };
+      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, totalHours, hasEntries, isEdited, isNewRow };
     });
+
   
     setStaticTimeSheetData(mappedTimeSheetData);
 
@@ -79,15 +83,25 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
     }
 
 
+
+    const generateColor = () => {
+      const CHHAPOLA = Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, '0');
+      return `#${CHHAPOLA}`;
+    };
+
+
     const mappedTimeSheetData = timeSheetData.map((el) => {
       const weekDayDates = getWeekDayDates(el);
       const hours = getWeekDayHours(el);
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
+      const totalHours = el.mw_totalhours;
       let hasEntries = hours.some((h) => h !== null);
       let isEdited = false;
       let isNewRow = false;
-      console.log(el);
+      let randomColor = generateColor()
       return { 
         weekDayDates, 
         hours, 
@@ -95,9 +109,11 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
         timeSheetStatus, 
         chargecodeId: el._cr303_chargecode_value, 
         timeSheetId: el.cr303_timesheetid,
+        totalHours,
         hasEntries, 
         isEdited, 
-        isNewRow
+        isNewRow,
+        randomColor
       }
     });
 
@@ -106,26 +122,44 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       weekDayDates: createDateStringArray(weekStart, weekEnd),
       hours: [null, null, null, null, null, null, null],
       comments: [null, null, null, null, null, null, null], 
-      timeSheetStatus: null, 
+      timeSheetStatus: null,
       chargecodeId: null,
+      totalHours: null,
       hasEntries: false,
       isEdited: false, 
       isNewRow: true
     }
 
 
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+  
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+
+    setRandomColor(color)
+
     // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
     //   return array2.hours.map(function(value, index) {
     //     return value + (array1[index] || 0);
     //   }, 0);
     // }, []);
-
+    console.log(projectTotalHours);
     // console.log(result);
-    
     setProjectId(timeSheetData.length > 0 ? projectId : [...projectId, null])
     setModifiedTimeSheetData(timeSheetData.length > 0 ? mappedTimeSheetData : [draftTimeSheetData])
   }, [timeSheetData]);
   
+
+
+
+  useEffect(() => {
+    const total = _.sumBy(modifiedTimeSheetData, 'totalHours');
+
+    setProjectTotalHours(total)
+  }, [projectTotalHours])
+
 
 
   const totalSundayHours = timeSheetData.reduce(
@@ -189,8 +223,30 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
     updatedCell[rowIndex].hasEntries = updatedCell[rowIndex].hours.some((h) => h !== null);
     updatedCell[rowIndex].isEdited = isSheetEdited;
-    setModifiedTimeSheetData(updatedCell)
+    setModifiedTimeSheetData(updatedCell);
   }
+
+
+
+
+  const onBlurHandler = (hours, rowIndex, totalhours) => {
+    const sum = hours.reduce((acc, curr) => {
+      return acc + curr;
+    }, 0);
+
+    const updatedCell = [...modifiedTimeSheetData];
+    updatedCell[rowIndex].totalHours = sum;
+
+    const total = _.sumBy(updatedCell, 'totalHours');
+
+    setProjectTotalHours(total)
+
+    console.log(updatedCell);  
+
+    setModifiedTimeSheetData(updatedCell);
+  }
+
+
 
 
 
@@ -198,6 +254,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
   return (
     <div>
+      {typeof projectTotalHours === 'number' && <ProjectChart projectTotalHours={projectTotalHours} />}
       <TableContainer>
         <Table aria-label="time sheet table">
           <TableHead sx={{background: "#77AFF2"}}>
@@ -231,11 +288,10 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
           <TableBody ref={tableRef}>
             {modifiedTimeSheetData &&
               modifiedTimeSheetData.map((sheet, rowIndex) => {
-                const sum = sheet.hours.reduce((acc, curr) => {
-                  return acc + curr;
-                }, 0);
+                // const sum = sheet.hours.reduce((acc, curr) => {
+                //   return acc + curr;
+                // }, 0);
 
-                console.log(sum);
                 return (
                   <TableRow key={rowIndex + 1}>
                     <TableCell sx={{borderLeft: "none !important" }}>
@@ -277,6 +333,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                               defaultValue={sheet.hours[cellIndex]}
                               onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
                               autoFocus
+                              onBlur={() => onBlurHandler(sheet.hours, rowIndex, sheet.totalHours)}
                             />
                           ) : (
                             sheet.hours[cellIndex] > 0 ? sheet.hours[cellIndex] : ""
@@ -285,7 +342,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                       );
                     })}
                     <TableCell sx={{ fontSize: 20 }} align="center">
-                      {sum > 0 ? sum : ""}
+                      {sheet.totalHours}
                     </TableCell>
                     <TableCell sx={{  
                       borderRight: "none !important", 

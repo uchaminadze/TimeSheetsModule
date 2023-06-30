@@ -35,9 +35,10 @@ function TimeSheetTable({ instance, accounts }) {
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
   const [currentYear, setCurrentYear] = useState("");
-  const [timeSheetIds, setTimeSheetIds] = useState([]);
+  // const [timeSheetIds, setTimeSheetIds] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [employeeId, setEmployeeId] = useState(null);
 
   useEffect(() => {
     if (!apiCalled) {
@@ -51,6 +52,8 @@ function TimeSheetTable({ instance, accounts }) {
       getTimeSheets();
     }
   }, [weekId, isSubmitted, isSaved]);
+
+
 
   function graphCall() {
     instance
@@ -73,84 +76,94 @@ function TimeSheetTable({ instance, accounts }) {
               "userEmail",
               resp.userPrincipalName.toLowerCase()
             );
-            checkUserExists();
+            dataverseCall();
           })
           .catch((err) => console.log(err));
       });
   }
 
-  function addEmployeeInDatabase(token) {
-    const userInfoString = localStorage.getItem("userInfo");
-    const userInfo = JSON.parse(userInfoString);
-    const { firstName, lastName, email, phone } = userInfo;
-    fetch(
-      "https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/mw_employees",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mw_firstname: firstName,
-          mw_lastname: lastName,
-          mw_email: email,
-          mw_phonenumber: phone,
-        }),
-      }
-    )
-      .then((data) => {
-        console.log(data);
-        dataverseCall(token);
-      })
-      .catch((err) => console.log(err));
-  }
+  // function addEmployeeInDatabase(token) {
+  //   const userInfoString = localStorage.getItem("userInfo");
+  //   const userInfo = JSON.parse(userInfoString);
+  //   const { firstName, lastName, email, phone } = userInfo;
+  //   fetch(
+  //     "https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/mw_employees",
+  //     {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         mw_firstname: firstName,
+  //         mw_lastname: lastName,
+  //         mw_email: email,
+  //         mw_phonenumber: phone,
+  //       }),
+  //     }
+  //   )
+  //     .then((data) => {
+  //       console.log(data);
+  //       dataverseCall(token);
+  //     })
+  //     .catch((err) => console.log(err));
+  // }
 
-  function checkUserExists() {
-    const accessToken = localStorage.getItem("accessToken");
-    const userEmail = localStorage.getItem("userEmail");
-    console.log(accessToken);
+  // function checkUserExists() {
+  //   const accessToken = localStorage.getItem("accessToken");
+  //   const userEmail = localStorage.getItem("userEmail");
+  //   console.log(accessToken);
+  //   instance
+  //     .acquireTokenSilent({
+  //       ...loginRequest,
+  //       account: accounts[0],
+  //       scopes: [baseUrl + "/user_impersonation"],
+  //       // scopes: [baseUrl+"/.default"]
+  //     })
+  //     .then((response) => {
+  //       callDataverseWebAPI("mw_employees", response.accessToken)
+  //         .then((resp) => {
+  //           localStorage.setItem("accessToken", response.accessToken);
+  //           // const foundUser = !!resp.value.find(
+  //           //   (user) => user.mw_email === userEmail
+  //           // );
+  //           // if (foundUser) {
+  //           // } else {
+  //           //   alert("Error! User can't be found.")
+  //           // }
+  //           dataverseCall(response.accessToken);
+  //         })
+  //         .catch((err) => console.log(err))
+  //         .catch((err) => console.log(err));
+  //     });
+  // }
+
+  function dataverseCall() {
     instance
       .acquireTokenSilent({
         ...loginRequest,
-        account: accounts[0],
-        scopes: [baseUrl + "/user_impersonation"],
-        // scopes: [baseUrl+"/.default"]
-      })
-      .then((response) => {
-        callDataverseWebAPI("mw_employees", response.accessToken)
-          .then((resp) => {
-            localStorage.setItem("accessToken", response.accessToken);
-            const foundUser = !!resp.value.find(
-              (user) => user.mw_email === userEmail
-            );
-            if (!foundUser) {
-              addEmployeeInDatabase(response.accessToken);
-            } else {
-              dataverseCall(response.accessToken);
-            }
+          account: accounts[0],
+          scopes: [baseUrl + "/user_impersonation"],
+          // scopes: [baseUrl+"/.default"]
+        })
+        .then((response) => {
+            const urlEndpoint = `?$filter=mw_email eq '${localStorage.getItem(
+              "userEmail"
+            )}'`;
+            callDataverseWebAPI("mw_employees" + urlEndpoint, response.accessToken)
+              .then((resp) => {
+                localStorage.setItem(
+                  "modifiedByValue",
+                  resp.value[0]._modifiedby_value
+                );
+                localStorage.setItem('accessToken', response.accessToken);
+                setEmployeeId(resp.value[0].mw_employeeid)
+                getExactWeek();
+                getWeeks();
+                getProjects();
+              })
+              .catch((err) => console.log(err));
           })
-          .catch((err) => console.log(err))
-          .catch((err) => console.log(err));
-      });
-  }
-
-  function dataverseCall(token) {
-    const urlEndpoint = `?$filter=mw_email eq '${localStorage.getItem(
-      "userEmail"
-    )}'`;
-    callDataverseWebAPI("mw_employees" + urlEndpoint, token)
-      .then((resp) => {
-        localStorage.setItem(
-          "modifiedByValue",
-          resp.value[0]._modifiedby_value
-        );
-
-        getExactWeek();
-        getWeeks();
-        getProjects();
-      })
-      .catch((err) => console.log(err));
   }
 
   function getWeeks() {
@@ -311,6 +324,7 @@ function TimeSheetTable({ instance, accounts }) {
       const payload = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
         "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        "cr303_Employee@odata.bind": `/mw_employees(${employeeId})`,
         cr303_timesheetstatus: 824660001,
         cr303_sundayhours: sheet.hours[0],
         cr303_mondayhours: sheet.hours[1],
@@ -350,6 +364,7 @@ function TimeSheetTable({ instance, accounts }) {
       const payload = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
         "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        "cr303_Employee@odata.bind": `/mw_employees(${employeeId})`,
         cr303_sundayhours: sheet.hours[0],
         cr303_mondayhours: sheet.hours[1],
         cr303_tuesdayhours: sheet.hours[2],
