@@ -27,7 +27,7 @@ function AddTimeSheetRow() {
       chargecodeId: null,
       totalHours: null,
       isEdited: false,
-      isNewRow: true,
+      isNewRow: true
     };
 
     setProjectId([...projectId, null])

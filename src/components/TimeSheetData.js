@@ -67,8 +67,6 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
     };
   }, [timeSheetData]);
 
-
-
   useEffect(() => {
     function createDateStringArray(weekStart, weekEnd) {
       const dateArray = [];
@@ -84,12 +82,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
 
 
-    const generateColor = () => {
-      const CHHAPOLA = Math.floor(Math.random() * 16777215)
-        .toString(16)
-        .padStart(6, '0');
-      return `#${CHHAPOLA}`;
-    };
+
 
 
     const mappedTimeSheetData = timeSheetData.map((el) => {
@@ -101,7 +94,6 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       let hasEntries = hours.some((h) => h !== null);
       let isEdited = false;
       let isNewRow = false;
-      let randomColor = generateColor()
       return { 
         weekDayDates, 
         hours, 
@@ -112,8 +104,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
         totalHours,
         hasEntries, 
         isEdited, 
-        isNewRow,
-        randomColor
+        isNewRow
       }
     });
 
@@ -129,16 +120,6 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       isEdited: false, 
       isNewRow: true
     }
-
-
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-  
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-
-    setRandomColor(color)
 
     // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
     //   return array2.hours.map(function(value, index) {
@@ -156,9 +137,9 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
   useEffect(() => {
     const total = _.sumBy(modifiedTimeSheetData, 'totalHours');
-
+    console.log(total);
     setProjectTotalHours(total)
-  }, [projectTotalHours])
+  }, [projectTotalHours, modifiedTimeSheetData])
 
 
 
@@ -288,10 +269,6 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
           <TableBody ref={tableRef}>
             {modifiedTimeSheetData &&
               modifiedTimeSheetData.map((sheet, rowIndex) => {
-                // const sum = sheet.hours.reduce((acc, curr) => {
-                //   return acc + curr;
-                // }, 0);
-
                 return (
                   <TableRow key={rowIndex + 1}>
                     <TableCell sx={{borderLeft: "none !important" }}>
@@ -330,7 +307,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                           (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) ? (
                             <TextField
                               type="number"
-                              defaultValue={sheet.hours[cellIndex]}
+                              value={sheet.hours[cellIndex]}
                               onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
                               autoFocus
                               onBlur={() => onBlurHandler(sheet.hours, rowIndex, sheet.totalHours)}

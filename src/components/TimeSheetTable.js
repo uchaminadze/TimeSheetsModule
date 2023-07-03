@@ -53,8 +53,6 @@ function TimeSheetTable({ instance, accounts }) {
     }
   }, [weekId, isSubmitted, isSaved]);
 
-
-
   function graphCall() {
     instance
       .acquireTokenSilent({
@@ -142,28 +140,28 @@ function TimeSheetTable({ instance, accounts }) {
     instance
       .acquireTokenSilent({
         ...loginRequest,
-          account: accounts[0],
-          scopes: [baseUrl + "/user_impersonation"],
-          // scopes: [baseUrl+"/.default"]
-        })
-        .then((response) => {
-            const urlEndpoint = `?$filter=mw_email eq '${localStorage.getItem(
-              "userEmail"
-            )}'`;
-            callDataverseWebAPI("mw_employees" + urlEndpoint, response.accessToken)
-              .then((resp) => {
-                localStorage.setItem(
-                  "modifiedByValue",
-                  resp.value[0]._modifiedby_value
-                );
-                localStorage.setItem('accessToken', response.accessToken);
-                setEmployeeId(resp.value[0].mw_employeeid)
-                getExactWeek();
-                getWeeks();
-                getProjects();
-              })
-              .catch((err) => console.log(err));
+        account: accounts[0],
+        scopes: [baseUrl + "/user_impersonation"],
+        // scopes: [baseUrl+"/.default"]
+      })
+      .then((response) => {
+        const urlEndpoint = `?$filter=mw_email eq '${localStorage.getItem(
+          "userEmail"
+        )}'`;
+        callDataverseWebAPI("mw_employees" + urlEndpoint, response.accessToken)
+          .then((resp) => {
+            localStorage.setItem(
+              "modifiedByValue",
+              resp.value[0]._modifiedby_value
+            );
+            localStorage.setItem("accessToken", response.accessToken);
+            setEmployeeId(resp.value[0].mw_employeeid);
+            getExactWeek();
+            getWeeks();
+            getProjects();
           })
+          .catch((err) => console.log(err));
+      });
   }
 
   function getWeeks() {
@@ -217,7 +215,7 @@ function TimeSheetTable({ instance, accounts }) {
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
       .then((data) => {
         setTimeSheetData(data.value);
-        console.log(timeSheetData);
+        console.log(modifiedTimeSheetData);
 
         // const timesheetIDs = [];
 
@@ -242,6 +240,53 @@ function TimeSheetTable({ instance, accounts }) {
       })
       .catch((err) => console.log(err));
   }
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const fetchXML = `
+      <fetch version="1.0" mapping="logical" distinct="true">
+          <entity name="cr303_chargecode">
+              <attribute name="cr303_chargecodeid"/>
+              <attribute name="cr303_name"/>
+              <order attribute="cr303_name" descending="false"/>
+              <attribute name="mw_description"/>
+              <link-entity name="mw_cr303_chargecode_contact" intersect="true" visible="false" from="cr303_chargecodeid" to="cr303_chargecodeid">
+                  <link-entity name="contact" alias="ab" from="contactid" to="contactid">
+                      <filter type="and">
+                          <condition attribute="contactid" operator="eq" value="{fa12c696-994b-ec11-8c62-000d3a5aae82}" uitype="contact"/>
+                      </filter>
+                  </link-entity>
+              </link-entity>
+          </entity>
+      </fetch>
+    `;
+    const encodedFetchXML = encodeURIComponent(fetchXML);
+
+    const req = new XMLHttpRequest();
+
+    req.open(
+      "GET",
+      "https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_chargecodes?fetchXml=" +
+        encodedFetchXML,
+      true
+    );
+    req.setRequestHeader("OData-MaxVersion", "4.0");
+    req.setRequestHeader("OData-Version", "4.0");
+    req.setRequestHeader("Accept", "application/json");
+    req.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+    req.setRequestHeader("Prefer", 'odata.include-annotations="*"');
+
+    req.onreadystatechange = function () {
+      if (this.readyState === 4) {
+        req.onreadystatechange = null;
+        if (this.status === 200) {
+          var results = JSON.parse(this.response);
+          console.log(results);
+        }
+      }
+    };
+    req.send();
+  }, []);
 
   function getProjects() {
     const accessToken = localStorage.getItem("accessToken");
@@ -317,7 +362,6 @@ function TimeSheetTable({ instance, accounts }) {
     setWeekStartDate(formattedPreviousWeekStart);
   };
 
-
   function submitTimeSheets() {
     const accessToken = localStorage.getItem("accessToken");
     modifiedTimeSheetData?.forEach((sheet) => {
@@ -335,16 +379,23 @@ function TimeSheetTable({ instance, accounts }) {
         cr303_saturdayhours: sheet.hours[6],
       };
 
-      if(sheet.hasEntries && (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)){
+      if (
+        sheet.hasEntries &&
+        (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
+      ) {
         fetch(
-          `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""}`,
+          `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${
+            sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""
+          }`,
           {
             method: sheet.timeSheetId ? "PATCH" : "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify(sheet.timeSheetId ? {cr303_timesheetstatus: 824660001} : payload),
+            body: JSON.stringify(
+              sheet.timeSheetId ? { cr303_timesheetstatus: 824660001 } : payload
+            ),
           }
         )
           .then((resp) => {
@@ -375,7 +426,10 @@ function TimeSheetTable({ instance, accounts }) {
       };
 
       if (
-        (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) && sheet.isEdited && sheet.hasEntries
+        (sheet.timeSheetStatus === 824660000 ||
+          sheet.timeSheetStatus === null) &&
+        sheet.isEdited &&
+        sheet.hasEntries
       ) {
         fetch(
           `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${
@@ -419,7 +473,7 @@ function TimeSheetTable({ instance, accounts }) {
     const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue} and _cr303_week_value eq ${prevWeekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
       .then((data) => {
-        if(data.value.length > 0 && timeSheetData.length === 0){
+        if (data.value.length > 0 && timeSheetData.length === 0) {
           const copiedTimeSheetData = [];
           const copiedTimeSheetChargecodeId = [];
           data.value?.forEach((sheet) => {
@@ -464,9 +518,7 @@ function TimeSheetTable({ instance, accounts }) {
             ...modifiedTimeSheetData,
             ...copiedTimeSheetData,
           ]);
-
         }
-
       })
       .catch((err) => console.log(err));
   }
@@ -484,7 +536,7 @@ function TimeSheetTable({ instance, accounts }) {
             weekEnd={weekEnd}
           />
         )}
-        
+
         {timeSheetData && <WeeksDropdown weeks={weeks} />}
       </Stack>
       <br />
