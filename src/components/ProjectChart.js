@@ -6,7 +6,7 @@ import { Stack, Text } from '@fluentui/react';
 function ProjectChart({projectTotalHours}) {
     const {modifiedTimeSheetData} = useStore();
     return (
-            <Stack horizontal styles={{root: {gridGap: "4px"}}}>
+            <Stack horizontal styles={{root: {gridGap: "4px", marginBottom: "52px"}}}>
                 {modifiedTimeSheetData?.map((sheet, index) => {
                     const percentage = (sheet.totalHours / projectTotalHours) * 100;
                     const projectColor = 
@@ -19,9 +19,17 @@ function ProjectChart({projectTotalHours}) {
                         index === 6 ? "#F18888" : ""
                     console.log(index)
                     return(
-                        <>
-                            <div key={index} style={{backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: `${percentage}%`}}></div>
-                        </>
+                        <div key={index} style={{width: `${percentage}%`}}>
+                        <Stack.Item styles={{root: {width: "100%"}}}>
+                            <Text block>Project name</Text>
+                        </Stack.Item>
+
+                        <Stack.Item styles={{root: {backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}}>
+                            <div  style={{backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}></div>
+                        </Stack.Item>
+                        
+                        </div>
+
                     )
                 })}
             </Stack>

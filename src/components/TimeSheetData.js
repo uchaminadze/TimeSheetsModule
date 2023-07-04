@@ -307,7 +307,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                           (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) ? (
                             <TextField
                               type="number"
-                              value={sheet.hours[cellIndex]}
+                              value={sheet.hours[cellIndex] || ""}
                               onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
                               autoFocus
                               onBlur={() => onBlurHandler(sheet.hours, rowIndex, sheet.totalHours)}
