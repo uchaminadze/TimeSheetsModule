@@ -20,14 +20,17 @@ function ProjectChart({projectTotalHours}) {
                     console.log(index)
                     return(
                         <div key={index} style={{width: `${percentage}%`}}>
-                        <Stack.Item styles={{root: {width: "100%"}}}>
-                            <Text block>Project name</Text>
-                        </Stack.Item>
+                            <Stack.Item styles={{root: {width: "100%"}}}>
+                                <Text block styles={{root: {fontSize: "14px", color: "#87898A", fontWeight: 400, lineHeight: "20px"}}}>{sheet.projectName}</Text>
+                            </Stack.Item>
 
-                        <Stack.Item styles={{root: {backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}}>
-                            <div  style={{backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}></div>
-                        </Stack.Item>
-                        
+                            <Stack.Item styles={{root: {width: "100%"}}}>
+                                <Text styles={{root: {fontSize: "32px", color: "#373A3C", marginBottom: "16px", fontWeight: 600, lineHeight: "45px"}}} block>{sheet.totalHours}</Text>
+                            </Stack.Item>
+
+                            <Stack.Item styles={{root: {backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}}>
+                                <div  style={{backgroundColor: projectColor, borderRadius: "4px", height: "14px", width: "100%"}}></div>
+                            </Stack.Item>
                         </div>
 
                     )

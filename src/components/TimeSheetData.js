@@ -53,10 +53,11 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       const comments = getWeekDayComments(el);
       const timeSheetStatus = getTimeSheetStatus(el);
       const totalHours = el.mw_totalhours;
+      let projectName = "";
       let hasEntries = false;
       let isEdited = false;
       let isNewRow = false;
-      return { weekDayDates, hours, comments, timeSheetStatus, chargecodeId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, totalHours, hasEntries, isEdited, isNewRow };
+      return { weekDayDates, hours, comments, timeSheetStatus, projectName, projectId: el._cr303_chargecode_value, timeSheetId: el.cr303_timesheetid, totalHours, hasEntries, isEdited, isNewRow };
     });
 
   
@@ -82,9 +83,6 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
 
 
-
-
-
     const mappedTimeSheetData = timeSheetData.map((el) => {
       const weekDayDates = getWeekDayDates(el);
       const hours = getWeekDayHours(el);
@@ -92,18 +90,20 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       const timeSheetStatus = getTimeSheetStatus(el);
       const totalHours = el.mw_totalhours;
       let hasEntries = hours.some((h) => h !== null);
+      let projectName = "";
       let isEdited = false;
       let isNewRow = false;
       return { 
         weekDayDates, 
         hours, 
         comments, 
-        timeSheetStatus, 
-        chargecodeId: el._cr303_chargecode_value, 
+        timeSheetStatus,
+        projectName,
+        projectId: el._cr303_chargecode_value, 
         timeSheetId: el.cr303_timesheetid,
         totalHours,
         hasEntries, 
-        isEdited, 
+        isEdited,
         isNewRow
       }
     });
@@ -114,24 +114,34 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
       hours: [null, null, null, null, null, null, null],
       comments: [null, null, null, null, null, null, null], 
       timeSheetStatus: null,
-      chargecodeId: null,
+      projectName: "",
+      projectId: null,
       totalHours: null,
       hasEntries: false,
       isEdited: false, 
       isNewRow: true
     }
 
-    // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
-    //   return array2.hours.map(function(value, index) {
-    //     return value + (array1[index] || 0);
-    //   }, 0);
-    // }, []);
-    console.log(projectTotalHours);
-    // console.log(result);
+
+
+    const updatedTimeSheet = [...mappedTimeSheetData];
+    projects.forEach((p) => {
+      updatedTimeSheet.forEach((s) => {
+        if(p.key === s.projectId){
+          s.projectName = p.text
+        }
+      })
+    })
+
     setProjectId(timeSheetData.length > 0 ? projectId : [...projectId, null])
-    setModifiedTimeSheetData(timeSheetData.length > 0 ? mappedTimeSheetData : [draftTimeSheetData])
+    setModifiedTimeSheetData(timeSheetData.length > 0 ? updatedTimeSheet : [draftTimeSheetData])
   }, [timeSheetData]);
   
+  // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
+  //   return array2.hours.map(function(value, index) {
+  //     return value + (array1[index] || 0);
+  //   }, 0);
+  // }, []);
 
 
 
@@ -229,7 +239,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
 
 
 
-
+  const currentDay = "12"
 
 
 
@@ -249,12 +259,13 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
               {modifiedTimeSheetData &&
                 modifiedTimeSheetData[0]?.weekDayDates.map((sheet, index) => {
                   const slicedDay = sheet.slice(8, 10);
+                  console.log(slicedDay)
                   return (
-                    <TableCell key={index + 1} align="center" sx={{borderBottom: "none !important"}}>
-                      <Typography sx={{ fontSize: 14, color: "white", opacity: 0.6 }}>
+                    <TableCell key={index + 1} align="center" sx={{borderBottom: "none !important", backgroundColor: currentDay === slicedDay && "#D8EEFF"}}>
+                      <Typography sx={{ fontSize: 14, color: currentDay === slicedDay ? "#87898A" : "white", opacity: 0.6 }}>
                         {weekDayNames[index]}
                       </Typography>
-                      <Typography sx={{ fontSize: 32, color: "white" }}>{slicedDay}</Typography>
+                      <Typography sx={{ fontSize: 32, color: currentDay === slicedDay ? "#373A3C" : "white" }}>{slicedDay}</Typography>
                     </TableCell>
                   );
                 })}
@@ -289,12 +300,12 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                             position: "relative",
                             cursor:
                               (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) &&
-                              sheet.chargecodeId !== null
+                              sheet.projectId !== null
                                 ? "pointer"
                                 : "auto",
                             pointerEvents: 
                               (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) &&
-                              sheet.chargecodeId === null
+                              sheet.projectId === null
                                 ? "none"
                                 : "auto"
                           }}
@@ -303,7 +314,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                         >
                           {(cellEdit?.rowIndex === rowIndex &&
                           cellEdit?.cellIndex === cellIndex &&
-                          sheet.chargecodeId !== null) &&
+                          sheet.projectId !== null) &&
                           (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) ? (
                             <TextField
                               type="number"

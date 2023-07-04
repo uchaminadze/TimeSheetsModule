@@ -24,7 +24,7 @@ function AddTimeSheetRow() {
       hours: [null, null, null, null, null, null, null],
       comments: [null, null, null, null, null, null, null],
       timeSheetStatus: null,
-      chargecodeId: null,
+      projectId: null,
       totalHours: null,
       isEdited: false,
       isNewRow: true

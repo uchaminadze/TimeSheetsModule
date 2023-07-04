@@ -248,7 +248,7 @@ function TimeSheetTable({ instance, accounts }) {
     modifiedTimeSheetData?.forEach((sheet) => {
       const payload = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
-        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
         "mw_Resource@odata.bind": `/contacts(${contactid})`,
         cr303_timesheetstatus: 824660001,
         cr303_sundayhours: sheet.hours[0],
@@ -296,7 +296,7 @@ function TimeSheetTable({ instance, accounts }) {
     modifiedTimeSheetData?.forEach((sheet) => {
       const payload = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
-        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.chargecodeId})`,
+        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
         "mw_Resource@odata.bind": `/contacts(${contactid})`,
         cr303_sundayhours: sheet.hours[0],
         cr303_mondayhours: sheet.hours[1],
@@ -350,54 +350,65 @@ function TimeSheetTable({ instance, accounts }) {
   }
 
   function copyTimeSheetsFromPreviousWeek(prevWeekId) {
-    const modifiedByValue = localStorage.getItem("modifiedByValue");
+    const contactid = localStorage.getItem("contactid");
     const accessToken = localStorage.getItem("accessToken");
-    const urlEndpoint = `?$filter=_ownerid_value eq ${modifiedByValue} and _cr303_week_value eq ${prevWeekId}`;
+    const urlEndpoint = `?$filter=_mw_resource_value eq ${contactid} and _cr303_week_value eq ${prevWeekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
-      .then((data) => {
+    .then((data) => {
+        console.log(projects)
+        console.log(modifiedTimeSheetData)
         if (data.value.length > 0 && timeSheetData.length === 0) {
           const copiedTimeSheetData = [];
-          const copiedTimeSheetChargecodeId = [];
-          data?.value.forEach((sheet) => {
-            const copiedTimeSheet = {
-              weekDayDates: [
-                sheet.cr303_sundaydate,
-                sheet.cr303_mondaydate,
-                sheet.cr303_tuesdaydate,
-                sheet.cr303_wednesdaydate,
-                sheet.cr303_thursdaydate,
-                sheet.cr303_fridaydate,
-                sheet.cr303_saturdaydate2,
-              ],
-              hours: [
-                sheet.cr303_sundayhours,
-                sheet.cr303_mondayhours,
-                sheet.cr303_tuesdayhours,
-                sheet.cr303_wednesdayhours,
-                sheet.cr303_thursdayhours,
-                sheet.cr303_fridayhours,
-                sheet.cr303_saturdayhours,
-              ],
-              comments: [
-                sheet.cr303_sundaycomment,
-                sheet.cr303_mondaycomment,
-                sheet.cr303_tuesdaycomment,
-                sheet.cr303_wednesdaycomment,
-                sheet.cr303_thursdaycomment,
-                sheet.cr303_fridaycomment,
-                sheet.cr303_saturdaycomment,
-              ],
-              timeSheetStatus: 824660000,
-              chargecodeId: sheet._cr303_chargecode_value,
-              isEdited: false,
-              isNewRow: true,
-            };
+          const copiedTimeSheetprojectId = [];
+          let copiedTimeSheet = {};
+          data?.value.forEach((sheet, index) => {
+            modifiedTimeSheetData.forEach((p) => {
+              copiedTimeSheet = {
+                weekDayDates: [
+                  p.weekDayDates[0],
+                  p.weekDayDates[1],
+                  p.weekDayDates[2],
+                  p.weekDayDates[3],
+                  p.weekDayDates[4],
+                  p.weekDayDates[5],
+                  p.weekDayDates[6],
+                ],
+                hours: [
+                  sheet.cr303_sundayhours,
+                  sheet.cr303_mondayhours,
+                  sheet.cr303_tuesdayhours,
+                  sheet.cr303_wednesdayhours,
+                  sheet.cr303_thursdayhours,
+                  sheet.cr303_fridayhours,
+                  sheet.cr303_saturdayhours,
+                ],
+                comments: [
+                  sheet.cr303_sundaycomment,
+                  sheet.cr303_mondaycomment,
+                  sheet.cr303_tuesdaycomment,
+                  sheet.cr303_wednesdaycomment,
+                  sheet.cr303_thursdaycomment,
+                  sheet.cr303_fridaycomment,
+                  sheet.cr303_saturdaycomment,
+                ],
+                timeSheetStatus: 824660000,
+                projectName: projects.map((el) => el.key === sheet._cr303_chargecode_value && el.text),
+                projectId: sheet._cr303_chargecode_value,
+                timeSheetId: sheet.cr303_timesheetid,
+                totalHours: sheet.mw_totalhours,
+                hasEntries: true,
+                isEdited: false,
+                isNewRow: true,
+              };
+            })
             copiedTimeSheetData.push(copiedTimeSheet);
-            copiedTimeSheetChargecodeId.push(sheet._cr303_chargecode_value);
+            copiedTimeSheetprojectId.push(sheet._cr303_chargecode_value);
           });
-          setProjectId([...projectId, ...copiedTimeSheetChargecodeId]);
+
+          
+          setProjectId([...copiedTimeSheetprojectId]);
           setModifiedTimeSheetData([
-            ...modifiedTimeSheetData,
+            // ...modifiedTimeSheetData,
             ...copiedTimeSheetData,
           ]);
         }

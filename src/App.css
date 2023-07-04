@@ -27,14 +27,8 @@ body{
 
 
 
-.title-99,
-.title-139,
-.title-141,
-.title-162,
-.title-142,
-.title-143,
-.title-116,
-.title-120,
+[class^="title-"],
+[class*=" title-"],
 .dropdown-115,
 .dropdown-118:focus::after,
 .dropdown-97:focus::after{
