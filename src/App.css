@@ -34,6 +34,7 @@ body{
 .dropdown-97:focus::after{
     border: none !important;
     outline: none !important;
+    background-color: initial;
 }
 
 
@@ -53,10 +54,16 @@ body{
 }
 
 
-.root-110:hover{
+/* [class^="root-"]:hover,
+[class*=" root-"]:hover{
+    background-color:unset;
+    color: unset;
+} */
+
+/* .root-110:hover{
     background: #1A6BA9;
     color: white;
-}
+} */
 
 
 

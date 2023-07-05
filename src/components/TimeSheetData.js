@@ -35,8 +35,8 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
   const [cellEdit, setCellEdit] = useState(null);
   const tableRef = useRef();
   const [projectTotalHours, setProjectTotalHours] = useState();
-  const [randomColor, setRandomColor] = useState();
-
+  const [summedWeekDaysHours, setSummedWeekDaysHours] = useState([]);
+  const [totalWeekDaysHours, setTotalWeekDaysHours] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -136,65 +136,32 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
     setProjectId(timeSheetData.length > 0 ? projectId : [...projectId, null])
     setModifiedTimeSheetData(timeSheetData.length > 0 ? updatedTimeSheet : [draftTimeSheetData])
   }, [timeSheetData]);
+
+
   
-  // const result = modifiedTimeSheetData?.reduce(function(array1, array2) {
-  //   return array2.hours.map(function(value, index) {
-  //     return value + (array1[index] || 0);
-  //   }, 0);
-  // }, []);
-
-
-
   useEffect(() => {
     const total = _.sumBy(modifiedTimeSheetData, 'totalHours');
-    console.log(total);
+
     setProjectTotalHours(total)
   }, [projectTotalHours, modifiedTimeSheetData])
 
 
 
-  const totalSundayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_sundayhours,
-    0
-  );
-  const totalMondayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_mondayhours,
-    0
-  );
-  const totalTuesdayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_tuesdayhours,
-    0
-  );
-  const totalWednesdayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_wednesdayhours,
-    0
-  );
-  const totalThursdayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_thursdayhours,
-    0
-  );
-  const totalFridayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_fridayhours,
-    0
-  );
-  const totalSaturdayHours = timeSheetData.reduce(
-    (sum, obj) => sum + obj.cr303_saturdayhours,
-    0
-  );
+  useEffect(() => {
+    const groupedHours = _.zip(
+      ...(modifiedTimeSheetData ?? []).map(obj => obj.hours)
+    );
+    
+    const totalHours = _.map(groupedHours, arr => (_.sum(arr) || 0));
 
-  const allWorkedHours = [
-    totalSundayHours,
-    totalMondayHours,
-    totalTuesdayHours,
-    totalWednesdayHours,
-    totalThursdayHours,
-    totalFridayHours,
-    totalSaturdayHours,
-  ];
+    const total = totalHours.reduce((acc, curr) => {
+      return acc + curr;
+    }, 0);
 
-  const total = allWorkedHours.reduce((acc, curr) => {
-    return acc + curr;
-  }, 0);
+    setTotalWeekDaysHours(total);
+    setSummedWeekDaysHours(totalHours);
+  }, [staticTimeSheetData, projectId])
+
 
   const onClickHandler = (rowIndex, cellIndex) => {
     setCellEdit({ rowIndex, cellIndex });
@@ -218,22 +185,27 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
   }
 
 
-
-
-  const onBlurHandler = (hours, rowIndex, totalhours) => {
+  const onBlurHandler = (hours, hour, rowIndex) => {
     const sum = hours.reduce((acc, curr) => {
       return acc + curr;
     }, 0);
-
     const updatedCell = [...modifiedTimeSheetData];
     updatedCell[rowIndex].totalHours = sum;
+    const totalProjectHours = _.sumBy(updatedCell, 'totalHours');
+    const groupedHours = _.zip(
+      ...(modifiedTimeSheetData ?? []).map(obj => obj.hours)
+    );
+    
+    const totalHours = _.map(groupedHours, arr => (_.sum(arr) || 0));
 
-    const total = _.sumBy(updatedCell, 'totalHours');
+    const totalweekdayshours = totalHours.reduce((acc, curr) => {
+      return acc + curr;
+    }, 0);
 
-    setProjectTotalHours(total)
-
-    console.log(updatedCell);  
-
+    setTotalWeekDaysHours(totalweekdayshours);
+    setSummedWeekDaysHours(totalHours)
+    setProjectTotalHours(totalProjectHours)
+    console.log(hour);
     setModifiedTimeSheetData(updatedCell);
   }
 
@@ -321,7 +293,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                               value={sheet.hours[cellIndex] || ""}
                               onChange={(e) => onChangeHandler(e, rowIndex, cellIndex)}
                               autoFocus
-                              onBlur={() => onBlurHandler(sheet.hours, rowIndex, sheet.totalHours)}
+                              onBlur={() => onBlurHandler(sheet.hours, sheet.hours[cellIndex], rowIndex)}
                             />
                           ) : (
                             sheet.hours[cellIndex] > 0 ? sheet.hours[cellIndex] : ""
@@ -362,29 +334,13 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
               >
                 Total work time
               </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalSundayHours > 0 ? totalSundayHours : ""}
+              {summedWeekDaysHours.map((hour, index) => {
+                return <TableCell key={index} sx={{ fontSize: 20 }} align="center">
+                {hour > 0 ? hour : ""}
               </TableCell>
+              })}
               <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalMondayHours > 0 ? totalMondayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalTuesdayHours > 0 ? totalTuesdayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalWednesdayHours > 0 ? totalWednesdayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalThursdayHours > 0 ? totalThursdayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalFridayHours > 0 ? totalFridayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {totalSaturdayHours > 0 ? totalSaturdayHours : ""}
-              </TableCell>
-              <TableCell sx={{ fontSize: 20 }} align="center">
-                {total > 0 ? total : ""}
+                {totalWeekDaysHours > 0 ? totalWeekDaysHours : ""}
               </TableCell>
               <TableCell sx={{borderRight: "none !important" }}></TableCell>
             </TableRow>

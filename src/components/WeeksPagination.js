@@ -76,12 +76,21 @@ function WeeksPagination({
     return(
       <Stack horizontal>
         <DefaultButton styles={styles} onClick={() => getPreviousWeek()}>
-          <Icon iconName="ChevronLeftMed"/>
+          <Icon styles={{root: {
+            color: "#373A3C",
+            fontSize: "17px",
+            fontWeight: 600
+          }}} iconName="ChevronLeftMed"/>
         </DefaultButton>
         <DefaultButton styles={styles} onClick={() => getNextWeek()}>
-          <Icon iconName="ChevronRightMed"/>
+          <Icon styles={{root: {
+            color: "#373A3C",
+            fontSize: "17px",
+            fontWeight: 600,
+            marginLeft: "12px"
+          }}} iconName="ChevronRightMed"/>
         </DefaultButton>
-        <Typography alignSelf="center">{formattedDate}, {currentYear}</Typography>
+        <Typography sx={{fontSize: "20px", marginLeft: "12px", lineHeight: "24px", fontWeight: 600, color: "#373A3C"}} alignSelf="center">{formattedDate}, {currentYear}</Typography>
       </Stack>
     )
 }

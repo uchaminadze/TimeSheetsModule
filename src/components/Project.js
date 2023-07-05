@@ -83,9 +83,19 @@ function Project({ projects, p, status, rowIndex }) {
                 rowIndex === 6 && projectId[rowIndex] !== null ? "#F18888" :
                 projectId[rowIndex] === null && "#D0D6DA",
               borderRadius: "4px",
-              zIndex: 100000000000
+              zIndex: 1
             }
-          }}}
+          },
+          
+          title: {
+            padding: "0 40px 0 14px",
+          },
+
+          caretDown: {
+            color: "#373A3C",
+            fontWeight: 600
+          }
+        }}
           selectedKey={selectedKey}
           disabled={status !== null && status !== 824660000}
           
