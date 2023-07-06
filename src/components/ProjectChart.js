@@ -17,7 +17,10 @@ function ProjectChart({projectTotalHours}) {
                         index === 4 ? "#BBAC25" :
                         index === 5 ? "#34A7FF" :
                         index === 6 ? "#F18888" : ""
-                    console.log(index)
+
+                    if(!sheet.totalHours > 0){
+                        return false
+                    }
                     return(
                         <div key={index} style={{width: `${percentage}%`}}>
                             <Stack.Item styles={{root: {width: "100%"}}}>

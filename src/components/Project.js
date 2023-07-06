@@ -57,7 +57,7 @@ function Project({ projects, p, status, rowIndex }) {
   // }
 
   return (
-    <Stack direction="row" spacing={10} alignItems="center">
+    <Stack direction="row" spacing={3.3} alignItems="center">
         <Dropdown
           placeholder={!p && "Select a project"}
           options={projects}

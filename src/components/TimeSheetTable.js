@@ -195,9 +195,6 @@ function TimeSheetTable({ instance, accounts }) {
           const projectIdArray = data.value.map((c) => {
             return c._cr303_chargecode_value;
           });
-          const checkingSubmitted = !data.value.some(obj => obj.cr303_timesheetstatus === 824660000);
-          console.log(modifiedTimeSheetData)
-          setAreTimeSheetsSubmitted(checkingSubmitted)
           const timestamp = new Date().getTime(); // Get current timestamp
           const id = timestamp.toString();
           setUniqueId(id);
