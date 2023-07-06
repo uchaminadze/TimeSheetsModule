@@ -128,6 +128,8 @@ function TimeSheetTable({ instance, accounts }) {
           key: week.cr303_weekid,
         }));
 
+        newWeeks.sort((a, b) => a.date.localeCompare(b.date));
+
         setWeeks([...weeks, ...newWeeks]);
       })
       .catch((err) => console.log(err));
@@ -388,7 +390,7 @@ function TimeSheetTable({ instance, accounts }) {
       })
       .catch((err) => console.log(err));
   }
-
+  // ah also, I'm interested, when I copy previous week and change nothing, should clicking on save button still save timesheets?
   function copyTimeSheetsFromPreviousWeek(prevWeekId) {
     const contactid = localStorage.getItem("contactid");
     const accessToken = localStorage.getItem("accessToken");
@@ -438,7 +440,7 @@ function TimeSheetTable({ instance, accounts }) {
                 // timeSheetId: sheet.cr303_timesheetid,
                 totalHours: sheet.mw_totalhours,
                 hasEntries: true,
-                isEdited: false,
+                isEdited: true,
                 isNewRow: true,
               };
             })
