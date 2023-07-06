@@ -222,11 +222,11 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
             <TableRow>
               <TableCell sx={{padding: "0px 117px 0px 24px", borderLeft: "none !important", borderBottom: "none !important", borderTopLeftRadius: "4px !important", borderBottomLeftRadius: "4px !important"}}>
                 <Stack direction="row" spacing={16.3}>
-                  <Typography sx={{ fontSize: 20, color: "white" }}>Project</Typography>
-                  <Typography sx={{ fontSize: 20, color: "white" }}>Description</Typography>
+                  <Typography sx={{ fontSize: 18, lineHeight: 1, color: "white" }}>Project</Typography>
+                  <Typography sx={{ fontSize: 18, lineHeight: 1, color: "white" }}>Description</Typography>
                 </Stack>
               </TableCell>
-              {apiCalled ? (timeSheetData && modifiedTimeSheetData &&
+              {timeSheetData && modifiedTimeSheetData &&
                 modifiedTimeSheetData[0]?.weekDayDates.map((sheet, index) => {
                   const slicedDay = sheet.slice(8, 10);
                   console.log(weekDayNames[index])
@@ -238,24 +238,11 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                       <Typography sx={{ fontSize: 32, color: (weekDayNames[index] === "Sun" || weekDayNames[index] === "Sat") ? "#373A3C" : "white" }}>{slicedDay}</Typography>
                     </TableCell>
                   )
-                })) : (modifiedTimeSheetData &&
-                  modifiedTimeSheetData[0]?.weekDayDates.map((sheet, index) => {
-                  const slicedDay = sheet.slice(8, 10);
-                  console.log(weekDayNames[index])
-                  return (
-                    <TableCell key={index + 1} align="center" sx={{padding: "3px 20px", borderBottom: "none !important", backgroundColor: (weekDayNames[index] === "Sun" || weekDayNames[index] === "Sat") && "#D8EEFF"}}>
-                      <Typography sx={{ fontSize: 14, color: (weekDayNames[index] === "Sun" || weekDayNames[index] === "Sat") ? "#87898A" : "white", opacity: 0.6 }}>
-                        {weekDayNames[index]}
-                      </Typography>
-                      <Typography sx={{ fontSize: 32, color: (weekDayNames[index] === "Sun" || weekDayNames[index] === "Sat") ? "#373A3C" : "white" }}>{slicedDay}</Typography>
-                    </TableCell>
-                  )
-                })
-                )}
-              <TableCell sx={{padding: "8px 25px", fontSize: 20, color: "white", borderBottom: "none !important" }} align="center">
+                })}
+              <TableCell sx={{padding: "8px 25px", lineHeight: 1, fontSize: 18, color: "white", borderBottom: "none !important" }} align="center">
                 Total
               </TableCell>
-              <TableCell sx={{padding: "8px 25px", fontSize: 20, color: "white", borderBottom: "none !important", borderRight: "none !important", borderTopRightRadius: "4px !important", borderBottomRightRadius: "4px !important" }} align="center">
+              <TableCell sx={{padding: "8px 25px", lineHeight: 1, fontSize: 18, color: "white", borderBottom: "none !important", borderRight: "none !important", borderTopRightRadius: "4px !important", borderBottomRightRadius: "4px !important" }} align="center">
                 Status
               </TableCell>
             </TableRow>
@@ -284,7 +271,8 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                               cellEdit?.cellIndex === cellIndex &&
                               sheet.projectId !== null) &&
                               (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) ? "6px" : "8px 18px",
-                            fontSize: 20,
+                            fontSize: 18,
+                            lineHeight: 1,
                             position: "relative",
                             cursor:
                               (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null) &&
@@ -324,7 +312,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
                         </TableCell>
                       );
                     })}
-                    <TableCell sx={{padding: "8px 32px", fontSize: 20 }} align="center">
+                    <TableCell sx={{padding: "8px 32px", lineHeight: 1, fontSize: 18 }} align="center">
                       {sheet.totalHours > 0 ? Number(sheet.totalHours).toFixed(2) : ""}
                     </TableCell>
                     <TableCell sx={{
@@ -354,16 +342,16 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
             <TableRow>
               <TableCell
                 align="right"
-                sx={{ fontWeight: 600, color: "#373A3C", fontSize: 20, borderLeft: "none !important" }}
+                sx={{ fontWeight: 600, color: "#373A3C", fontSize: 18, lineHeight: 1, borderLeft: "none !important" }}
               >
                 Total work time
               </TableCell>
               {summedWeekDaysHours.map((hour, index) => {
-                return <TableCell key={index} sx={{ fontSize: 20 }} align="center">
+                return <TableCell key={index} sx={{ lineHeight: 1, fontSize: 18 }} align="center">
                 {hour > 0 ? Number(hour).toFixed(2) : ""}
               </TableCell>
               })}
-              <TableCell sx={{ fontSize: 20 }} align="center">
+              <TableCell sx={{ lineHeight: 1, fontSize: 18 }} align="center">
                 {totalWeekDaysHours > 0 ? Number(totalWeekDaysHours).toFixed(2) : ""}
               </TableCell>
               <TableCell sx={{borderRight: "none !important" }}></TableCell>

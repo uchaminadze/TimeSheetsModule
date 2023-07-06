@@ -57,14 +57,14 @@ function Project({ projects, p, status, rowIndex }) {
   // }
 
   return (
-    <Stack direction="row" spacing={3.3} alignItems="center">
+    <Stack direction="row" spacing={5} alignItems="center">
         <Dropdown
           placeholder={!p && "Select a project"}
           options={projects}
           responsiveMode={2}
           onChange={handleDropdownChange}
           styles={{root: {
-            width: 170,
+            width: 150,
             border: "none",
             position: "relative",
             "::before": {
@@ -89,12 +89,17 @@ function Project({ projects, p, status, rowIndex }) {
           
           title: {
             padding: "0 40px 0 14px",
+            fontSize: 12
           },
 
           caretDown: {
             color: "#373A3C",
             fontWeight: 600
           }
+
+          // dropdownOptionText: {
+          //   fontSize: 12
+          // }
         }}
           selectedKey={selectedKey}
           disabled={status !== null && status !== 824660000}
@@ -102,7 +107,7 @@ function Project({ projects, p, status, rowIndex }) {
         />
 
         <Typography sx={{
-            fontSize: 14,
+            fontSize: 12,
             color: changeSelectedDescription ? "#373A3C" : "#87898A"
           }}
         >
