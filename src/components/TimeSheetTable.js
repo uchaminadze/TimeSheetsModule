@@ -5,7 +5,7 @@ import { callMsGraph } from "../api/graph";
 import { callDataverseWebAPI } from "../api/dataverse";
 import useStore from "../store/useStore";
 import WeeksPagination from "./WeeksPagination";
-import { DefaultButton, PrimaryButton, Stack } from "@fluentui/react";
+import { DefaultButton, PrimaryButton, Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import WeeksDropdown from "./WeeksDropdown";
 import AddTimeSheetRow from "./AddTimeSheetRow";
 import SubmitTimeSheets from "./SubmitTimeSheets";
@@ -30,22 +30,19 @@ function TimeSheetTable({ instance, accounts }) {
     setUniqueId,
     modifiedTimeSheetData,
     setModifiedTimeSheetData,
-    // isLoading,
-    // setIsLoading,
+    setAreTimeSheetsSubmitted
   } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
   const [currentYear, setCurrentYear] = useState("");
-  // const [timeSheetIds, setTimeSheetIds] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState({
     homescreen: false,
-    button: false
-  })
+    savebutton: false,
+    submitbutton: false
+  });
+  // const [areTimeSheetsSubmitted, setAreTimeSheetsSubmitted] = useState(false);
 
   useEffect(() => {
     if (!apiCalled) {
@@ -57,8 +54,13 @@ function TimeSheetTable({ instance, accounts }) {
   useEffect(() => {
     if (weekId) {
       getTimeSheets("homescreen");
+      setIsLoading((prevState) => ({
+        homescreen: true,
+        savebutton: false,
+        submitbutton: false
+      }));
     }
-  }, [weekId, isSubmitted]);
+  }, [weekId]);
 
   function graphCall() {
     instance
@@ -164,10 +166,23 @@ function TimeSheetTable({ instance, accounts }) {
     console.log(loader);
 
     
-    // setIsLoading((prevState) => ({
-    //   homescreen: loader === 'homescreen',
-    //   button: loader === 'button'
-    // }));
+    
+    if(loader === "homescreen"){
+      setIsLoading((prevState) => ({
+        ...prevState,
+        homescreen: true,
+      }));
+    }else if(loader === "savebutton"){
+      setIsLoading((prevState) => ({
+        ...prevState,
+        savebutton: true,
+      }));
+    }else if(loader === "submitbutton"){
+      setIsLoading((prevState) => ({
+        ...prevState,
+        submitbutton: true,
+      }));
+    }
 
     const urlEndpoint = `?$filter=_mw_resource_value eq ${contactid} and _cr303_week_value eq ${weekId}`;
 
@@ -178,19 +193,23 @@ function TimeSheetTable({ instance, accounts }) {
           const projectIdArray = data.value.map((c) => {
             return c._cr303_chargecode_value;
           });
-  
+          const checkingSubmitted = !data.value.some(obj => obj.cr303_timesheetstatus === 824660000);
+          console.log(modifiedTimeSheetData)
+          setAreTimeSheetsSubmitted(checkingSubmitted)
           const timestamp = new Date().getTime(); // Get current timestamp
           const id = timestamp.toString();
           setUniqueId(id);
-          // setIsLoading((prevState) => ({
-          //   homescreen: false,
-          //   button: false
-          // }));
-          console.log(isLoading);
+          if(data?.value){
+            setIsLoading((prevState) => ({
+              homescreen: false,
+              button: false
+            }));
+          }
+          
           setProjectId(projectIdArray);
         })
         .catch((err) => console.log(err))
-    // }
+      // }
   }
 
   function getProjects() {
@@ -288,7 +307,7 @@ function TimeSheetTable({ instance, accounts }) {
           .then((resp) => {
             if (resp.status === 204) {
               console.log("Submitted successfully");
-              setIsSubmitted(true);
+              getTimeSheets("submitbutton");
             }
           })
           .catch((error) => console.log(error));
@@ -336,7 +355,7 @@ function TimeSheetTable({ instance, accounts }) {
             if (resp.status === 204) {
               console.log("Saved successfully");
               // setIsSaved(true);
-              getTimeSheets("button")
+              getTimeSheets("savebutton")
             }
           })
           .catch((error) => console.log(error))
@@ -346,12 +365,26 @@ function TimeSheetTable({ instance, accounts }) {
 
   function copyPreviousWeek(prevWeekDate) {
     const accessToken = localStorage.getItem("accessToken");
+    console.log(modifiedTimeSheetData);
+    if(modifiedTimeSheetData?.length === 1){
+      setIsLoading((prevState) => ({
+        ...prevState,
+        homescreen: true,
+      }));
+      setAreTimeSheetsSubmitted(false)
+    }
     callDataverseWebAPI(
       `cr303_weeks?$filter=cr303_startdate eq ${prevWeekDate}`,
       accessToken
     )
       .then((data) => {
-        copyTimeSheetsFromPreviousWeek(data.value[0].cr303_weekid);
+        if(data?.value){
+          setIsLoading((prevState) => ({
+            ...prevState,
+            homescreen: false,
+          }));
+          copyTimeSheetsFromPreviousWeek(data.value[0].cr303_weekid);
+        }
       })
       .catch((err) => console.log(err));
   }
@@ -369,6 +402,7 @@ function TimeSheetTable({ instance, accounts }) {
           const copiedTimeSheetprojectId = [];
           let copiedTimeSheet = {};
           data?.value.forEach((sheet, index) => {
+            const projectName = projects.find((el) => el.key === sheet._cr303_chargecode_value)?.text || '';
             modifiedTimeSheetData.forEach((p) => {
               copiedTimeSheet = {
                 weekDayDates: [
@@ -398,10 +432,10 @@ function TimeSheetTable({ instance, accounts }) {
                   sheet.cr303_fridaycomment,
                   sheet.cr303_saturdaycomment,
                 ],
-                timeSheetStatus: 824660000,
-                projectName: projects.map((el) => el.key === sheet._cr303_chargecode_value && el.text),
+                timeSheetStatus: null,
+                projectName: projectName,
                 projectId: sheet._cr303_chargecode_value,
-                timeSheetId: sheet.cr303_timesheetid,
+                // timeSheetId: sheet.cr303_timesheetid,
                 totalHours: sheet.mw_totalhours,
                 hasEntries: true,
                 isEdited: false,
@@ -411,7 +445,6 @@ function TimeSheetTable({ instance, accounts }) {
             copiedTimeSheetData.push(copiedTimeSheet);
             copiedTimeSheetprojectId.push(sheet._cr303_chargecode_value);
           });
-
           
           setProjectId([...copiedTimeSheetprojectId]);
           setModifiedTimeSheetData([
@@ -425,7 +458,7 @@ function TimeSheetTable({ instance, accounts }) {
 
   return (
     <>
-    {isLoading.homescreen ? <p>Loading...</p> : <div className="main-content">
+    {isLoading.homescreen ? <Spinner size={SpinnerSize.large} styles={{root: {height: "82vh"}}}/> : <div className="main-content">
       {timeSheetData && (
         <>
             <Stack horizontal styles={{root: {
@@ -458,8 +491,8 @@ function TimeSheetTable({ instance, accounts }) {
               <CopyPreviousWeek copyPreviousWeek={copyPreviousWeek} />
             </Stack.Item>
             <Stack.Item>
-              <SaveTimeSheets saveTimeSheets={saveTimeSheets} />
-              <SubmitTimeSheets submitTimeSheets={submitTimeSheets} />
+              <SaveTimeSheets saveTimeSheets={saveTimeSheets} isLoading={isLoading} />
+              <SubmitTimeSheets submitTimeSheets={submitTimeSheets} isLoading={isLoading} modifiedTimeSheetData={modifiedTimeSheetData}/>
             </Stack.Item>
           </Stack>
         </>
