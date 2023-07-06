@@ -35,7 +35,22 @@ function AddTimeSheetRow() {
   };
   return (
     <DefaultButton
-      styles={{ root: { marginRight: 10, border: "none", fontSize: "16px", color: "#1A6BA9" } }}
+      styles={{ 
+      root: { 
+        marginRight: 10, 
+        border: "none", 
+        fontSize: "16px", 
+        color: "#1A6BA9" 
+      }, 
+      rootHovered: {
+        backgroundColor: "transparent", 
+        color: "#1A6BA9"
+      },
+      rootPressed: {
+        backgroundColor: "transparent", 
+        color: "#1A6BA9"
+      }
+    }}
       onClick={addNewRow}
     >
       {/* <Icon iconName="CalculatorAddition" styles={{root: {marginRight: 10}}}/> */}

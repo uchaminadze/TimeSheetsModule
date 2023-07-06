@@ -24,11 +24,26 @@ function CopyPreviousWeek({ copyPreviousWeek }) {
   };
   return (
     <DefaultButton
-      styles={{ root: { marginLeft: 10, border: "none", fontSize: "16px", color: "#1A6BA9" }}}
+      styles={{
+        root: {
+          marginLeft: 10,
+          border: "none",
+          fontSize: "16px",
+          color: "#1A6BA9",
+        },
+        rootHovered: { 
+            backgroundColor: "transparent", 
+            color: "#1A6BA9" 
+        },
+        rootPressed: { 
+            backgroundColor: "transparent", 
+            color: "#1A6BA9" 
+        }
+      }}
       onClick={handlePreviousWeekCopy}
     >
       {/* <Icon iconName="Copy" styles={{root: {marginRight: 10}}}/> */}
-      <ContentCopyRounded sx={{marginRight: 1.6}} />
+      <ContentCopyRounded sx={{ marginRight: 1.6 }} />
       Copy previous week
     </DefaultButton>
   );
