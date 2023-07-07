@@ -220,7 +220,7 @@ export const TimeSheetData = ({ projects, weekStart, weekEnd }) => {
         <Table aria-label="time sheet table">
           <TableHead sx={{background: "#77AFF2"}}>
             <TableRow>
-              <TableCell sx={{padding: "0px 117px 0px 24px", borderLeft: "none !important", borderBottom: "none !important", borderTopLeftRadius: "4px !important", borderBottomLeftRadius: "4px !important"}}>
+              <TableCell sx={{padding: "0px 144px 0px 24px", borderLeft: "none !important", borderBottom: "none !important", borderTopLeftRadius: "4px !important", borderBottomLeftRadius: "4px !important"}}>
                 <Stack direction="row" spacing={16.3}>
                   <Typography sx={{ fontSize: 18, lineHeight: 1, color: "white" }}>Project</Typography>
                   <Typography sx={{ fontSize: 18, lineHeight: 1, color: "white" }}>Description</Typography>

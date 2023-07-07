@@ -57,7 +57,7 @@ function Project({ projects, p, status, rowIndex }) {
   // }
 
   return (
-    <Stack direction="row" spacing={5} alignItems="center">
+    <Stack direction="row" spacing={4.8} alignItems="center">
         <Dropdown
           placeholder={!p && "Select a project"}
           options={projects}
@@ -89,7 +89,7 @@ function Project({ projects, p, status, rowIndex }) {
           
           title: {
             padding: "0 40px 0 14px",
-            fontSize: 12
+            fontSize: 14
           },
 
           caretDown: {
@@ -107,7 +107,7 @@ function Project({ projects, p, status, rowIndex }) {
         />
 
         <Typography sx={{
-            fontSize: 12,
+            fontSize: 14,
             color: changeSelectedDescription ? "#373A3C" : "#87898A"
           }}
         >
