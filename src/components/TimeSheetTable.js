@@ -38,7 +38,8 @@ function TimeSheetTable({ instance, accounts }) {
   const [weekEnd, setWeekEnd] = useState("");
   const [currentYear, setCurrentYear] = useState("");
   const [isLoading, setIsLoading] = useState({
-    homescreen: false,
+    onfirstrender: false,
+    afterfirstrender: false,
     savebutton: false,
     submitbutton: false
   });
@@ -53,12 +54,13 @@ function TimeSheetTable({ instance, accounts }) {
 
   useEffect(() => {
     if (weekId) {
-      getTimeSheets("homescreen");
-      setIsLoading((prevState) => ({
-        homescreen: true,
-        savebutton: false,
-        submitbutton: false
-      }));
+      // setIsLoading((prevState) => ({
+      //   onfirstrender: true,
+      //   afterfirstrender: false,
+      //   savebutton: false,
+      //   submitbutton: false
+      // }));
+      getTimeSheets("onfirstrender");
     }
   }, [weekId]);
 
@@ -158,6 +160,7 @@ function TimeSheetTable({ instance, accounts }) {
         setWeekStart(data.value[0].cr303_startdate);
         setWeekEnd(data.value[0].cr303_enddate);
         setCurrentYear(data.value[0].cr303_year);
+        // getTimeSheets("onfirstrender");
       })
       .catch((err) => console.log(err));
   }
@@ -169,10 +172,15 @@ function TimeSheetTable({ instance, accounts }) {
 
     
     
-    if(loader === "homescreen"){
+    if(loader === "onfirstrender" && apiCalled){
       setIsLoading((prevState) => ({
         ...prevState,
-        homescreen: true,
+        onfirstrender: true,
+      }));
+    }else if(loader === "afterfirstrender"){
+      setIsLoading((prevState) => ({
+        ...prevState,
+        afterfirstrender: true,
       }));
     }else if(loader === "savebutton"){
       setIsLoading((prevState) => ({
@@ -181,27 +189,29 @@ function TimeSheetTable({ instance, accounts }) {
       }));
     }else if(loader === "submitbutton"){
       setIsLoading((prevState) => ({
-        ...prevState,
+        ...prevState, 
         submitbutton: true,
       }));
     }
 
     const urlEndpoint = `?$filter=_mw_resource_value eq ${contactid} and _cr303_week_value eq ${weekId}`;
 
-    // if(isLoading.homescreen || isLoading.button){
+    // if(isLoading.onfirstrender || isLoading.button){
       callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
         .then((data) => {
           setTimeSheetData(data.value);
           const projectIdArray = data.value.map((c) => {
             return c._cr303_chargecode_value;
           });
-          const timestamp = new Date().getTime(); // Get current timestamp
+          const timestamp = new Date().getTime();
           const id = timestamp.toString();
           setUniqueId(id);
           if(data?.value){
             setIsLoading((prevState) => ({
-              homescreen: false,
-              button: false
+              onfirstrender: false,
+              afterfirstrender: false,
+              submitbutton: false,
+              savebutton: false
             }));
           }
           
@@ -231,6 +241,7 @@ function TimeSheetTable({ instance, accounts }) {
 
   const getPreviousWeek = () => {
     setApiCalled(false);
+
     const currentDate = new Date(weekStartDate);
 
     currentDate.setUTCHours(5, 0, 0, 0);
@@ -243,6 +254,8 @@ function TimeSheetTable({ instance, accounts }) {
 
     const formattedPreviousWeekStart =
       previousWeekStart.toISOString().split("T")[0] + "T05:00:00Z";
+
+    getTimeSheets("afterfirstrender")
 
     setWeekStartDate(formattedPreviousWeekStart);
   };
@@ -263,7 +276,10 @@ function TimeSheetTable({ instance, accounts }) {
     const formattedPreviousWeekStart =
       previousWeekStart.toISOString().split("T")[0] + "T05:00:00Z";
 
+    getTimeSheets("afterfirstrender")
+
     setWeekStartDate(formattedPreviousWeekStart);
+
   };
 
   function submitTimeSheets() {
@@ -365,37 +381,37 @@ function TimeSheetTable({ instance, accounts }) {
   function copyPreviousWeek(prevWeekDate) {
     const accessToken = localStorage.getItem("accessToken");
     console.log(modifiedTimeSheetData);
-    if(modifiedTimeSheetData?.length === 1){
-      setIsLoading((prevState) => ({
-        ...prevState,
-        homescreen: true,
-      }));
-      setAreTimeSheetsSubmitted(false)
-    }
+    // if(weekId !== "4798a277-e6c1-ed11-83fe-000d3a381764" && modifiedTimeSheetData?.length === 1){
+    //   setIsLoading((prevState) => ({
+    //     ...prevState,
+    //     onfirstrender: true,
+    //   }));
+    // }
+
+    setAreTimeSheetsSubmitted(false)
     callDataverseWebAPI(
       `cr303_weeks?$filter=cr303_startdate eq ${prevWeekDate}`,
       accessToken
     )
       .then((data) => {
         if(data?.value){
-          setIsLoading((prevState) => ({
-            ...prevState,
-            homescreen: false,
-          }));
           copyTimeSheetsFromPreviousWeek(data.value[0].cr303_weekid);
+          // setIsLoading((prevState) => ({
+          //   ...prevState,
+          //   onfirstrender: false,
+          // }));
+          getTimeSheets("afterfirstrender")
         }
       })
       .catch((err) => console.log(err));
   }
-  // ah also, I'm interested, when I copy previous week and change nothing, should clicking on save button still save timesheets?
+
   function copyTimeSheetsFromPreviousWeek(prevWeekId) {
     const contactid = localStorage.getItem("contactid");
     const accessToken = localStorage.getItem("accessToken");
     const urlEndpoint = `?$filter=_mw_resource_value eq ${contactid} and _cr303_week_value eq ${prevWeekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
     .then((data) => {
-        console.log(projects)
-        console.log(modifiedTimeSheetData)
         if (data.value.length > 0 && timeSheetData.length === 0) {
           const copiedTimeSheetData = [];
           const copiedTimeSheetprojectId = [];
@@ -445,7 +461,7 @@ function TimeSheetTable({ instance, accounts }) {
             copiedTimeSheetprojectId.push(sheet._cr303_chargecode_value);
           });
           
-          setProjectId([...copiedTimeSheetprojectId]);
+          setProjectId(copiedTimeSheet !== null && [...copiedTimeSheetprojectId]);
           setModifiedTimeSheetData([
             // ...modifiedTimeSheetData,
             ...copiedTimeSheetData,
@@ -457,47 +473,82 @@ function TimeSheetTable({ instance, accounts }) {
 
   return (
     <>
-    {isLoading.homescreen ? <Spinner size={SpinnerSize.large} styles={{root: {height: "82vh"}}}/> : <div className="main-content">
-      {timeSheetData && (
-        <>
-            <Stack horizontal styles={{root: {
-              borderBottom: "1px solid #D0D6DA",
-              borderTop: "1px solid #D0D6DA",
-              padding: "16px 0"
-            }}}>
-                <WeeksPagination
-                  getExactWeek={getExactWeek}
-                  getPreviousWeek={getPreviousWeek}
-                  getNextWeek={getNextWeek}
-                  currentYear={currentYear}
-                  weekStart={weekStart}
-                  weekEnd={weekEnd}
-                />
-              <WeeksDropdown weeks={weeks} />
+  {isLoading.onfirstrender ? (
+    <Spinner
+      size={SpinnerSize.large}
+      styles={{
+        root: {
+          height: "82vh",
+        },
+      }}
+    />
+  ) : (
+    <>
+      {isLoading.afterfirstrender && (
+        <Spinner
+          size={SpinnerSize.large}
+          styles={{
+            root: {
+              height: "100%",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              background: "rgba(0,0,0,0.2)",
+              zIndex: 1,
+            },
+          }}
+        />
+      )}
+      <div className="main-content">
+        {timeSheetData && (
+          <>
+            <Stack
+              horizontal
+              styles={{
+                root: {
+                  borderBottom: "1px solid #D0D6DA",
+                  borderTop: "1px solid #D0D6DA",
+                  padding: "16px 0",
+                },
+              }}
+            >
+              <WeeksPagination
+                getExactWeek={getExactWeek}
+                getPreviousWeek={getPreviousWeek}
+                getNextWeek={getNextWeek}
+                currentYear={currentYear}
+                weekStart={weekStart}
+                weekEnd={weekEnd}
+              />
+              <WeeksDropdown weeks={weeks} getTimeSheets={getTimeSheets}/>
             </Stack>
-          <br />
-          <br />
+            <br />
+            <br />
             <TimeSheetData
               projects={projects}
               weekStart={weekStart}
               weekEnd={weekEnd}
             />
-          <br />
-          <br />
-          <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-            <Stack.Item>
-              <AddTimeSheetRow />
-              <CopyPreviousWeek copyPreviousWeek={copyPreviousWeek} />
-            </Stack.Item>
-            <Stack.Item>
-              <SaveTimeSheets saveTimeSheets={saveTimeSheets} isLoading={isLoading} />
-              <SubmitTimeSheets submitTimeSheets={submitTimeSheets} isLoading={isLoading} modifiedTimeSheetData={modifiedTimeSheetData}/>
-            </Stack.Item>
-          </Stack>
-        </>
-      )}
-    </div>}
+            <br />
+            <br />
+            <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
+              <Stack.Item>
+                <AddTimeSheetRow />
+                <CopyPreviousWeek copyPreviousWeek={copyPreviousWeek} />
+              </Stack.Item>
+              <Stack.Item>
+                <SaveTimeSheets saveTimeSheets={saveTimeSheets} isLoading={isLoading} />
+                <SubmitTimeSheets submitTimeSheets={submitTimeSheets} isLoading={isLoading} modifiedTimeSheetData={modifiedTimeSheetData}/>
+              </Stack.Item>
+            </Stack>
+          </>
+        )}
+      </div>
     </>
+  )}
+</>
+
   );
 }
 
