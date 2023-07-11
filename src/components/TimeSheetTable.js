@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { baseUrl, loginRequest } from "../authConfig";
+import { baseUrl, dataverseConfig, loginRequest } from "../authConfig";
 import { TimeSheetData } from "./TimeSheetData";
 import { callMsGraph } from "../api/graph";
 import { callDataverseWebAPI } from "../api/dataverse";
@@ -12,6 +12,7 @@ import SubmitTimeSheets from "./SubmitTimeSheets";
 import CopyPreviousWeek from "./CopyPreviousWeek";
 import SaveTimeSheets from "./SaveTimeSheets";
 import { FetchXML } from "../api/fetchXML";
+import { BatchPostAccounts } from "../api/batchOperations";
 
 function TimeSheetTable({ instance, accounts }) {
   const {
@@ -285,8 +286,9 @@ function TimeSheetTable({ instance, accounts }) {
   function submitTimeSheets() {
     const accessToken = localStorage.getItem("accessToken");
     const contactid = localStorage.getItem("contactid");
-    modifiedTimeSheetData?.forEach((sheet) => {
-      const payload = {
+    const batchRequest = new BatchPostAccounts();
+    const timeSheetDataPayload = modifiedTimeSheetData?.map((sheet) => {
+      const newSheet = {
         "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
         "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
         "mw_Resource@odata.bind": `/contacts(${contactid})`,
@@ -300,35 +302,58 @@ function TimeSheetTable({ instance, accounts }) {
         cr303_saturdayhours: sheet.hours[6],
       };
 
-      if (
-        sheet.hasEntries &&
-        (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
-      ) {
-        fetch(
-          `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${
-            sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""
-          }`,
-          {
-            method: sheet.timeSheetId ? "PATCH" : "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(
-              sheet.timeSheetId ? { cr303_timesheetstatus: 824660001 } : payload
-            ),
-          }
-        )
-          .then((resp) => {
-            if (resp.status === 204) {
-              console.log("Submitted successfully");
-              getTimeSheets("submitbutton");
-            }
-          })
-          .catch((error) => console.log(error));
+
+      const existingSheet = {
+        cr303_timesheetstatus: 824660001
       }
-    });
+
+      return newSheet
+
+      // if (
+      //   !sheet.timeSheetId
+        // sheet.hasEntries &&
+        // (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
+      // ) {
+        // }
+      });
+      console.log(timeSheetDataPayload)
+      // batchRequest.addRequestItem(payload);
+      // batchRequest.sendRequest(accessToken)
+      //   .then((status) => {
+      //     if(status === 200){
+      //       getTimeSheets("submitbutton");
+      //     }
+      //   })
+      //   .catch((err) => console.log(err))
   }
+
+  // if (
+  //   sheet.hasEntries &&
+  //   (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
+  // ) {
+  //   fetch(
+  //     `${dataverseConfig.dataverseEndpoint}/cr303_timesheets${
+  //       sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""
+  //     }`,
+  //     {
+  //       method: sheet.timeSheetId ? "PATCH" : "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //       body: JSON.stringify(
+  //         sheet.timeSheetId ? { cr303_timesheetstatus: 824660001 } : payload
+  //       ),
+  //     }
+  //   )
+  //     .then((resp) => {
+  //       if (resp.status === 204) {
+  //         console.log("Submitted successfully");
+  //         getTimeSheets("submitbutton");
+  //       }
+  //     })
+  //     .catch((error) => console.log(error));
+  // }
 
   function saveTimeSheets() {
     const accessToken = localStorage.getItem("accessToken");
@@ -354,7 +379,7 @@ function TimeSheetTable({ instance, accounts }) {
           sheet.hasEntries
           ) {
           fetch(
-          `https://org2e01c0ca.api.crm.dynamics.com/api/data/v9.2/cr303_timesheets${
+          `${dataverseConfig.dataverseEndpoint}/cr303_timesheets${
             !sheet.isNewRow ? `(${sheet.timeSheetId})` : ""
           }`,
           {
