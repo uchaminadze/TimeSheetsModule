@@ -11,12 +11,18 @@
         
 
     BatchPostAccounts.prototype.addRequestItem = function(entity) {
-        this.content.push(this.batchItemHeader);
-        this.content.push("");
-        this.content.push("POST " + this.apiUrl + "/cr303_timesheets" + " HTTP/1.1");
-        this.content.push("Content-Type: application/json;type=entry");
-        this.content.push("");
-        this.content.push(JSON.stringify(entity));
+        console.log(entity)
+        entity.forEach((req) => {
+            if(req !== undefined){
+                this.content.push(this.batchItemHeader);
+                this.content.push("");
+                this.content.push(`${req.method} ${this.apiUrl}/cr303_timesheets${req.url} HTTP/1.1`);
+                this.content.push("Accept: application/json");
+                this.content.push("Content-Type: application/json");
+                this.content.push("");
+                this.content.push(JSON.stringify(req.body));
+            }
+        })
     }
         
 

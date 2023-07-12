@@ -81,6 +81,7 @@ function TimeSheetTable({ instance, accounts }) {
               phone: resp.mobilePhone,
             };
             const userInfoString = JSON.stringify(userInfo);
+            localStorage.setItem("Azure AD Token", JSON.stringify(response));
             localStorage.setItem("userInfo", userInfoString);
             localStorage.setItem(
               "userEmail",
@@ -288,72 +289,56 @@ function TimeSheetTable({ instance, accounts }) {
     const contactid = localStorage.getItem("contactid");
     const batchRequest = new BatchPostAccounts();
     const timeSheetDataPayload = modifiedTimeSheetData?.map((sheet) => {
+
       const newSheet = {
-        "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
-        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
-        "mw_Resource@odata.bind": `/contacts(${contactid})`,
-        cr303_timesheetstatus: 824660001,
-        cr303_sundayhours: sheet.hours[0],
-        cr303_mondayhours: sheet.hours[1],
-        cr303_tuesdayhours: sheet.hours[2],
-        cr303_wednesdayhours: sheet.hours[3],
-        cr303_thursdayhours: sheet.hours[4],
-        cr303_fridayhours: sheet.hours[5],
-        cr303_saturdayhours: sheet.hours[6],
+        method: "POST",
+        url: "",
+        body: {
+          "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+          "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
+          "mw_Resource@odata.bind": `/contacts(${contactid})`,
+          cr303_timesheetstatus: 824660001,
+          cr303_sundayhours: sheet.hours[0],
+          cr303_mondayhours: sheet.hours[1],
+          cr303_tuesdayhours: sheet.hours[2],
+          cr303_wednesdayhours: sheet.hours[3],
+          cr303_thursdayhours: sheet.hours[4],
+          cr303_fridayhours: sheet.hours[5],
+          cr303_saturdayhours: sheet.hours[6]
+        }
       };
 
-
       const existingSheet = {
-        cr303_timesheetstatus: 824660001
+        method: "PATCH",
+        url: `(${sheet.timeSheetId})`,
+        body: {
+          cr303_timesheetstatus: 824660001
+        }
       }
 
-      return newSheet
+      if(sheet.hasEntries && (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)){
+        if(sheet.timeSheetId){
+          return existingSheet
+        }
+        return newSheet
+      }
 
-      // if (
-      //   !sheet.timeSheetId
-        // sheet.hasEntries &&
-        // (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
-      // ) {
-        // }
-      });
-      console.log(timeSheetDataPayload)
-      // batchRequest.addRequestItem(payload);
-      // batchRequest.sendRequest(accessToken)
-      //   .then((status) => {
-      //     if(status === 200){
-      //       getTimeSheets("submitbutton");
-      //     }
-      //   })
-      //   .catch((err) => console.log(err))
+    });
+
+    if(timeSheetDataPayload.some((el) => el !== undefined)){
+      batchRequest.addRequestItem(timeSheetDataPayload);
+      batchRequest.sendRequest(accessToken)
+        .then((status) => {
+          if(status === 200){
+            getTimeSheets("submitbutton");
+          }
+        })
+        .catch((err) => console.log(err))
+    }
+
+    return
   }
 
-  // if (
-  //   sheet.hasEntries &&
-  //   (sheet.timeSheetStatus === 824660000 || sheet.timeSheetStatus === null)
-  // ) {
-  //   fetch(
-  //     `${dataverseConfig.dataverseEndpoint}/cr303_timesheets${
-  //       sheet.timeSheetId ? `(${sheet.timeSheetId})` : ""
-  //     }`,
-  //     {
-  //       method: sheet.timeSheetId ? "PATCH" : "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${accessToken}`,
-  //       },
-  //       body: JSON.stringify(
-  //         sheet.timeSheetId ? { cr303_timesheetstatus: 824660001 } : payload
-  //       ),
-  //     }
-  //   )
-  //     .then((resp) => {
-  //       if (resp.status === 204) {
-  //         console.log("Submitted successfully");
-  //         getTimeSheets("submitbutton");
-  //       }
-  //     })
-  //     .catch((error) => console.log(error));
-  // }
 
   function saveTimeSheets() {
     const accessToken = localStorage.getItem("accessToken");
