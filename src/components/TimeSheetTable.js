@@ -13,6 +13,7 @@ import CopyPreviousWeek from "./CopyPreviousWeek";
 import SaveTimeSheets from "./SaveTimeSheets";
 import { FetchXML } from "../api/fetchXML";
 import { BatchPostAccounts } from "../api/batchOperations";
+import { acquireTokenCall } from "../utils";
 
 function TimeSheetTable({ instance, accounts }) {
   const {
@@ -31,7 +32,9 @@ function TimeSheetTable({ instance, accounts }) {
     setUniqueId,
     modifiedTimeSheetData,
     setModifiedTimeSheetData,
-    setAreTimeSheetsSubmitted
+    setAreTimeSheetsSubmitted,
+    globalAccessToken,
+    setGlobalAccessToken
   } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
@@ -74,27 +77,23 @@ function TimeSheetTable({ instance, accounts }) {
       .then((response) => {
         callMsGraph(response.accessToken)
           .then((resp) => {
-            const userInfo = {
-              firstName: resp.givenName,
-              lastName: resp.surname,
-              email: resp.userPrincipalName.toLowerCase(),
-              phone: resp.mobilePhone,
-            };
-            const userInfoString = JSON.stringify(userInfo);
-            localStorage.setItem("Azure AD Token", JSON.stringify(response));
-            localStorage.setItem("userInfo", userInfoString);
-            localStorage.setItem(
-              "userEmail",
-              resp.userPrincipalName.toLowerCase()
-            );
-            dataverseCall();
+            // const userInfo = {
+            //   firstName: resp.givenName,
+            //   lastName: resp.surname,
+            //   email: resp.userPrincipalName.toLowerCase(),
+            //   phone: resp.mobilePhone,
+            // };
+            // const userInfoString = JSON.stringify(userInfo);
+            // localStorage.setItem("userInfo", userInfoString);
+            localStorage.setItem("userEmail",resp.userPrincipalName.toLowerCase());
+            dataverseCall(resp.userPrincipalName.toLowerCase());
           })
           .catch((err) => console.log(err));
       });
   }
 
 
-  function dataverseCall() {
+  function dataverseCall(email) {
     instance
       .acquireTokenSilent({
         ...loginRequest,
@@ -103,9 +102,7 @@ function TimeSheetTable({ instance, accounts }) {
         // scopes: [baseUrl+"/.default"]
       })
       .then((response) => {
-        const urlEndpoint = `?$filter=emailaddress1 eq '${localStorage.getItem(
-          "userEmail"
-        )}'`;
+        const urlEndpoint = `?$filter=emailaddress1 eq '${email}'`;
         callDataverseWebAPI("contacts" + urlEndpoint, response.accessToken)
           .then((resp) => {
             localStorage.setItem(
@@ -121,6 +118,25 @@ function TimeSheetTable({ instance, accounts }) {
           .catch((err) => console.log(err));
       });
   }
+
+
+
+  function checkToken(){
+    const currentTime = new Date();
+    const timeString = new Date(globalAccessToken).toISOString();
+    const targetTime = timeString.substring(11, 19);
+    const targetDate = new Date();
+    const [targetHours, targetMinutes, targetSeconds] = targetTime.split(":");
+    targetDate.setUTCHours(parseInt(targetHours, 10));
+    targetDate.setUTCMinutes(parseInt(targetMinutes, 10));
+    targetDate.setUTCSeconds(parseInt(targetSeconds, 10));
+
+    const timeDifference = targetDate - currentTime;
+    // console.log(timeDifference);
+    return timeDifference
+  }
+
+
 
   function getWeeks() {
     const accessToken = localStorage.getItem("accessToken");
@@ -341,51 +357,75 @@ function TimeSheetTable({ instance, accounts }) {
 
 
   function saveTimeSheets() {
+    const isTokenExpired = checkToken()
+    console.log(isTokenExpired)
     const accessToken = localStorage.getItem("accessToken");
     const contactid = localStorage.getItem("contactid");
-    modifiedTimeSheetData?.forEach((sheet) => {
-      const payload = {
-        "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
-        "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
-        "mw_Resource@odata.bind": `/contacts(${contactid})`,
-        cr303_sundayhours: sheet.hours[0],
-        cr303_mondayhours: sheet.hours[1],
-        cr303_tuesdayhours: sheet.hours[2],
-        cr303_wednesdayhours: sheet.hours[3],
-        cr303_thursdayhours: sheet.hours[4],
-        cr303_fridayhours: sheet.hours[5],
-        cr303_saturdayhours: sheet.hours[6],
+    const batchRequest = new BatchPostAccounts();
+    const timeSheetDataPayload = modifiedTimeSheetData?.map((sheet) => {
+      const newSheet = {
+        method: "POST",
+        url: "",
+        body: {
+          "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+          "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
+          "mw_Resource@odata.bind": `/contacts(${contactid})`,
+          cr303_sundayhours: sheet.hours[0],
+          cr303_mondayhours: sheet.hours[1],
+          cr303_tuesdayhours: sheet.hours[2],
+          cr303_wednesdayhours: sheet.hours[3],
+          cr303_thursdayhours: sheet.hours[4],
+          cr303_fridayhours: sheet.hours[5],
+          cr303_saturdayhours: sheet.hours[6],
+        }
       };
-      
+
+
+      const existingSheet = {
+        method: "PATCH",
+        url: `(${sheet.timeSheetId})`,
+        body: {
+          "cr303_Week@odata.bind": `/cr303_weeks(${weekId})`,
+          "cr303_ChargeCode@odata.bind": `/cr303_chargecodes(${sheet.projectId})`,
+          "mw_Resource@odata.bind": `/contacts(${contactid})`,
+          cr303_sundayhours: sheet.hours[0],
+          cr303_mondayhours: sheet.hours[1],
+          cr303_tuesdayhours: sheet.hours[2],
+          cr303_wednesdayhours: sheet.hours[3],
+          cr303_thursdayhours: sheet.hours[4],
+          cr303_fridayhours: sheet.hours[5],
+          cr303_saturdayhours: sheet.hours[6],
+        }
+      };
+
+
       if (
         (sheet.timeSheetStatus === 824660000 ||
           sheet.timeSheetStatus === null) &&
           sheet.isEdited &&
           sheet.hasEntries
-          ) {
-          fetch(
-          `${dataverseConfig.dataverseEndpoint}/cr303_timesheets${
-            !sheet.isNewRow ? `(${sheet.timeSheetId})` : ""
-          }`,
-          {
-            method: sheet.isNewRow ? "POST" : "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(payload),
+        ) {
+          if(sheet.isNewRow){
+            return newSheet
           }
-        )
-          .then((resp) => {
-            if (resp.status === 204) {
-              console.log("Saved successfully");
-              // setIsSaved(true);
-              getTimeSheets("savebutton")
-            }
-          })
-          .catch((error) => console.log(error))
-      }
+
+          return existingSheet
+        }
     });
+
+    if(timeSheetDataPayload.some((el) => el !== undefined)){
+      batchRequest.addRequestItem(timeSheetDataPayload);
+      batchRequest.sendRequest(accessToken)
+        .then((status) => {
+          if(status === 200){
+            getTimeSheets("savebutton");
+          }
+        })
+        .catch((err) => console.log(err))
+    }
+
+    return
+
   }
 
   function copyPreviousWeek(prevWeekDate) {
