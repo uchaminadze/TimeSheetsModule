@@ -7,10 +7,10 @@ export function acquireTokenCall(instance, accounts) {
           ...loginRequest,
           account: accounts[0],
           scopes: [baseUrl + "/user_impersonation"],
-          forceRefresh: true
+        //   forceRefresh: true
         })
         .then((response) => {
-            resolve(response.accessToken);
+            resolve(response);
         })
         .catch((error) => {
             reject(error);

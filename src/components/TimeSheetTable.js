@@ -33,8 +33,8 @@ function TimeSheetTable({ instance, accounts }) {
     modifiedTimeSheetData,
     setModifiedTimeSheetData,
     setAreTimeSheetsSubmitted,
-    globalAccessToken,
-    setGlobalAccessToken
+    accessToken,
+    setAccessToken
   } = useStore();
   const [projects, setProjects] = useState([]);
   const [weeks, setWeeks] = useState([]);
@@ -47,6 +47,7 @@ function TimeSheetTable({ instance, accounts }) {
     savebutton: false,
     submitbutton: false
   });
+  const [tokenExpireDate, setTokenExpireDate] = useState();
   // const [areTimeSheetsSubmitted, setAreTimeSheetsSubmitted] = useState(false);
 
   useEffect(() => {
@@ -58,15 +59,12 @@ function TimeSheetTable({ instance, accounts }) {
 
   useEffect(() => {
     if (weekId) {
-      // setIsLoading((prevState) => ({
-      //   onfirstrender: true,
-      //   afterfirstrender: false,
-      //   savebutton: false,
-      //   submitbutton: false
-      // }));
       getTimeSheets("onfirstrender");
     }
-  }, [weekId]);
+    getExactWeek();
+    getWeeks();
+    getProjects();
+  }, [weekId, accessToken]);
 
   function graphCall() {
     instance
@@ -77,43 +75,34 @@ function TimeSheetTable({ instance, accounts }) {
       .then((response) => {
         callMsGraph(response.accessToken)
           .then((resp) => {
-            // const userInfo = {
-            //   firstName: resp.givenName,
-            //   lastName: resp.surname,
-            //   email: resp.userPrincipalName.toLowerCase(),
-            //   phone: resp.mobilePhone,
-            // };
-            // const userInfoString = JSON.stringify(userInfo);
-            // localStorage.setItem("userInfo", userInfoString);
             localStorage.setItem("userEmail",resp.userPrincipalName.toLowerCase());
-            dataverseCall(resp.userPrincipalName.toLowerCase());
+            dataverseCall();
           })
           .catch((err) => console.log(err));
       });
   }
 
 
-  function dataverseCall(email) {
+  function dataverseCall() {
     instance
       .acquireTokenSilent({
         ...loginRequest,
         account: accounts[0],
         scopes: [baseUrl + "/user_impersonation"],
+        // forceRefresh: isTokenExpired
         // scopes: [baseUrl+"/.default"]
       })
       .then((response) => {
-        const urlEndpoint = `?$filter=emailaddress1 eq '${email}'`;
+        const urlEndpoint = `?$filter=emailaddress1 eq '${localStorage.getItem("userEmail")}'`;
         callDataverseWebAPI("contacts" + urlEndpoint, response.accessToken)
           .then((resp) => {
             localStorage.setItem(
               "modifiedByValue",
               resp.value[0]._modifiedby_value
             );
-            localStorage.setItem("accessToken", response.accessToken);
+            setTokenExpireDate(response.expiresOn)
+            setAccessToken(response.accessToken)
             localStorage.setItem("contactid", resp.value[0].contactid);
-            getExactWeek();
-            getWeeks();
-            getProjects();
           })
           .catch((err) => console.log(err));
       });
@@ -123,7 +112,7 @@ function TimeSheetTable({ instance, accounts }) {
 
   function checkToken(){
     const currentTime = new Date();
-    const timeString = new Date(globalAccessToken).toISOString();
+    const timeString = new Date(tokenExpireDate).toISOString();
     const targetTime = timeString.substring(11, 19);
     const targetDate = new Date();
     const [targetHours, targetMinutes, targetSeconds] = targetTime.split(":");
@@ -132,15 +121,14 @@ function TimeSheetTable({ instance, accounts }) {
     targetDate.setUTCSeconds(parseInt(targetSeconds, 10));
 
     const timeDifference = targetDate - currentTime;
-    // console.log(timeDifference);
     return timeDifference
   }
 
 
 
   function getWeeks() {
-    const accessToken = localStorage.getItem("accessToken");
-    callDataverseWebAPI("cr303_weeks", accessToken)
+    if(accessToken){
+      callDataverseWebAPI("cr303_weeks", accessToken)
       .then((data) => {
         const newWeeks = data.value.map((week) => ({
           text: week.cr303_name,
@@ -153,6 +141,7 @@ function TimeSheetTable({ instance, accounts }) {
         setWeeks([...weeks, ...newWeeks]);
       })
       .catch((err) => console.log(err));
+    }
   }
 
   function getExactWeek() {
@@ -168,27 +157,24 @@ function TimeSheetTable({ instance, accounts }) {
     // Format the start of the week string
     // const formattedStartOfWeek = startOfWeek.toISOString().split("T")[0] + "T05:00:00Z";
 
-    const accessToken = localStorage.getItem("accessToken");
-    callDataverseWebAPI(
-      `cr303_weeks?$filter=cr303_startdate eq ${weekStartDate}`,
-      accessToken
-    )
-      .then((data) => {
-        setWeekId(data.value[0].cr303_weekid);
-        setWeekStart(data.value[0].cr303_startdate);
-        setWeekEnd(data.value[0].cr303_enddate);
-        setCurrentYear(data.value[0].cr303_year);
-        // getTimeSheets("onfirstrender");
-      })
-      .catch((err) => console.log(err));
+    if(accessToken){
+      callDataverseWebAPI(
+        `cr303_weeks?$filter=cr303_startdate eq ${weekStartDate}`,
+        accessToken
+      )
+        .then((data) => {
+          setWeekId(data.value[0].cr303_weekid);
+          setWeekStart(data.value[0].cr303_startdate);
+          setWeekEnd(data.value[0].cr303_enddate);
+          setCurrentYear(data.value[0].cr303_year);
+          // getTimeSheets("onfirstrender");
+        })
+        .catch((err) => console.log(err));
+    }
   }
 
   function getTimeSheets(loader) {
     const contactid = localStorage.getItem("contactid");
-    const accessToken = localStorage.getItem("accessToken");
-    console.log(loader);
-
-    
     
     if(loader === "onfirstrender" && apiCalled){
       setIsLoading((prevState) => ({
@@ -240,10 +226,10 @@ function TimeSheetTable({ instance, accounts }) {
   }
 
   function getProjects() {
-    const accessToken = localStorage.getItem("accessToken");
     const contactid = localStorage.getItem("contactid");
 
-    FetchXML(contactid, accessToken, "cr303_chargecodes")
+    if(accessToken){
+      FetchXML(contactid, accessToken, "cr303_chargecodes")
       .then((data) => {
         console.log(data);
         const newProjects = data.value.map((project) => ({
@@ -255,6 +241,7 @@ function TimeSheetTable({ instance, accounts }) {
         setProjects([...projects, ...newProjects]);
       })
       .catch((err) => console.log(err))
+    }
   }
 
   const getPreviousWeek = () => {
@@ -300,8 +287,11 @@ function TimeSheetTable({ instance, accounts }) {
 
   };
 
-  function submitTimeSheets() {
-    const accessToken = localStorage.getItem("accessToken");
+
+
+
+
+  function performSubmitTimeSheets(token){
     const contactid = localStorage.getItem("contactid");
     const batchRequest = new BatchPostAccounts();
     const timeSheetDataPayload = modifiedTimeSheetData?.map((sheet) => {
@@ -343,7 +333,7 @@ function TimeSheetTable({ instance, accounts }) {
 
     if(timeSheetDataPayload.some((el) => el !== undefined)){
       batchRequest.addRequestItem(timeSheetDataPayload);
-      batchRequest.sendRequest(accessToken)
+      batchRequest.sendRequest(token)
         .then((status) => {
           if(status === 200){
             getTimeSheets("submitbutton");
@@ -356,10 +346,32 @@ function TimeSheetTable({ instance, accounts }) {
   }
 
 
-  function saveTimeSheets() {
+
+  function submitTimeSheets() {
     const isTokenExpired = checkToken()
     console.log(isTokenExpired)
-    const accessToken = localStorage.getItem("accessToken");
+
+
+    if (isTokenExpired <= 0) {
+      instance
+        .acquireTokenSilent({
+          ...loginRequest,
+          account: accounts[0],
+          scopes: [baseUrl + "/user_impersonation"],
+          forceRefresh: true
+        })
+        .then((response) => {
+          setAccessToken(response.accessToken);
+
+          performSubmitTimeSheets(response.accessToken);
+        })
+        .catch((err) => console.log(err));
+    } else {
+      performSubmitTimeSheets(accessToken);
+    }
+  }
+  
+  function performSaveTimeSheets(token){
     const contactid = localStorage.getItem("contactid");
     const batchRequest = new BatchPostAccounts();
     const timeSheetDataPayload = modifiedTimeSheetData?.map((sheet) => {
@@ -415,7 +427,7 @@ function TimeSheetTable({ instance, accounts }) {
 
     if(timeSheetDataPayload.some((el) => el !== undefined)){
       batchRequest.addRequestItem(timeSheetDataPayload);
-      batchRequest.sendRequest(accessToken)
+      batchRequest.sendRequest(token)
         .then((status) => {
           if(status === 200){
             getTimeSheets("savebutton");
@@ -425,11 +437,35 @@ function TimeSheetTable({ instance, accounts }) {
     }
 
     return
+  }
+
+  function saveTimeSheets() {
+    const isTokenExpired = checkToken()
+    console.log(isTokenExpired)
+
+
+    if (isTokenExpired <= 0) {
+      instance
+        .acquireTokenSilent({
+          ...loginRequest,
+          account: accounts[0],
+          scopes: [baseUrl + "/user_impersonation"],
+          forceRefresh: true
+        })
+        .then((response) => {
+          setAccessToken(response.accessToken);
+
+          performSaveTimeSheets(response.accessToken);
+        })
+        .catch((err) => console.log(err));
+    } else {
+      performSaveTimeSheets(accessToken);
+    }
 
   }
 
   function copyPreviousWeek(prevWeekDate) {
-    const accessToken = localStorage.getItem("accessToken");
+    // const accessToken = localStorage.getItem("accessToken");
     console.log(modifiedTimeSheetData);
     // if(weekId !== "4798a277-e6c1-ed11-83fe-000d3a381764" && modifiedTimeSheetData?.length === 1){
     //   setIsLoading((prevState) => ({
@@ -458,7 +494,7 @@ function TimeSheetTable({ instance, accounts }) {
 
   function copyTimeSheetsFromPreviousWeek(prevWeekId) {
     const contactid = localStorage.getItem("contactid");
-    const accessToken = localStorage.getItem("accessToken");
+    // const accessToken = localStorage.getItem("accessToken");
     const urlEndpoint = `?$filter=_mw_resource_value eq ${contactid} and _cr303_week_value eq ${prevWeekId}`;
     callDataverseWebAPI("cr303_timesheets" + urlEndpoint, accessToken)
     .then((data) => {

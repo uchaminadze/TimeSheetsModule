@@ -11,7 +11,6 @@
         
 
     BatchPostAccounts.prototype.addRequestItem = function(entity) {
-        console.log(entity)
         entity.forEach((req) => {
             if(req !== undefined){
                 this.content.push(this.batchItemHeader);
